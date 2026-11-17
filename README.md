@@ -7,7 +7,7 @@ Selamat datang di repositori kerja **Subtim Inti Superapp Kampus**. Repositori i
 
 ## 📌 Ringkasan Proyek
 
-Superapp Kampus menyatukan 5 aplikasi mandiri ke dalam satu pintu akses terpadu (`superapp.fst.kampus.ac.id`):
+Superapp Kampus menyatukan 5 aplikasi mandiri ke dalam satu pintu akses terpadu (`superapp.kampus.ac.id`):
 1. **SukaKetemu** *(Smart Lost & Found)*
 2. **CampusFix** *(Pelaporan Kerusakan Fasilitas Kampus)*
 3. **SISKA** *(Sistem Pengaduan Kekerasan Seksual - Pengamanan Khusus)*
