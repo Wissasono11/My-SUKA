@@ -28,7 +28,7 @@ Proyek ini digerakkan oleh tim inti dengan pembagian fokus kerja sebagai berikut
 | **Hannah** | **UI/UX & Design System Lead** | • Merancang antarmuka Portal Utama (Halaman Login, Katalog Aplikasi, Dashboard, Profil).<br>• Menyusun panduan visual (*Mini Design System*) agar tampilan antar-aplikasi selaras.<br>• Memimpin pengujian alur pengguna (*User Acceptance Testing* / UAT). |
 | **Zamron** | **Frontend Engineer (App-Shell & Widgets)** | • Membangun website Portal Utama (*App-Shell Host*).<br>• Membuat komponen *Top Navigation Bar* (`<superapp-navbar>`) yang akan ditempelkan di 5 aplikasi.<br>• Mengembangkan kartu ringkasan informasi (*widgets*) di halaman beranda. |
 | **Chairul** | **Backend Engineer (SSO & Data Aggregator)** | • Membangun sistem login terpusat (*Central SSO Broker*) berbasis NIM & kata sandi.<br>• Menyediakan jembatan penukar token login untuk Express.js, Supabase, dan Firebase.<br>• Membuat API ringkasan (*BFF Aggregator*) untuk menyuplai data ke kartu beranda. |
-| **TBA / Shared** | **Jaringan & Infrastruktur (DevOps)** | *Peran ini saat ini masih terbuka. Untuk sementara, tugas setup domain, SSL, dan reverse proxy dikelola bersama oleh Bayu (PM) dan Chairul (BE) dengan pendampingan dosen/asisten lab.* |
+| **Salman** | **Jaringan & Infrastruktur (DevOps)** | *Peran ini saat ini masih terbuka. Untuk sementara, tugas setup domain, SSL, dan reverse proxy* |
 
 ---
 
