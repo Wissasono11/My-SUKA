@@ -1,0 +1,49 @@
+# docker compose --env-file ../.env.production -f infra/docker-compose.yml up -d --build
+services:
+  portal-api:
+    build: ../portal-api
+    restart: unless-stopped
+    env_file: ../.env.production
+    environment:
+      ENV: production
+    expose: ["8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2)"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+
+  portal-web:
+    build:
+      context: ..
+    restart: unless-stopped
+    env_file: ../.env.production
+    environment:
+      ENV: production
+      API_INTERNAL_URL: http://portal-api:8000
+      SSO_JWKS_URL: http://portal-api:8000/.well-known/jwks.json
+    expose: ["3000"]
+    depends_on:
+      portal-api:
+        condition: service_healthy
+    read_only: true
+    tmpfs: ["/tmp", "/app/.next/cache"]
+    security_opt: ["no-new-privileges:true"]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    env_file: ../.env.production
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [portal-web, portal-api]
+
+volumes:
+  caddy_data:
+  caddy_config:

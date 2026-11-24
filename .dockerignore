@@ -1,0 +1,7 @@
+node_modules
+.next
+.git
+portal-api/.venv
+portal-api/.pytest_cache
+.env*
+!.env.example

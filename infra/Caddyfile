@@ -1,0 +1,60 @@
+# Edge di VPS: TLS otomatis, routing, dan isolasi cookie. Belum diuji di sini (tidak ada Caddy); uji dengan `caddy validate`.
+{
+	email {$ACME_EMAIL}
+}
+
+# Upstream di Vercel memilih deployment dari header Host, jadi Host HARUS diganti ke host upstream
+# (header_up Host {upstream_hostport}); tanpa itu Vercel menjawab 404 DEPLOYMENT_NOT_FOUND.
+# *_ORIGIN wajib memakai skema, mis. https://siska-theta.vercel.app (tanpa path).
+# Layanan upstream: portal membuang cookie sesinya sebelum meneruskan, dan menimpa X-Forwarded-For.
+(service) {
+	handle {args[1]} {
+		reverse_proxy {args[0]} {
+			header_up Host {upstream_hostport}
+			header_up X-Forwarded-For {remote_host}
+			header_up Cookie "(?:^|;\s*)(?:__Host-)?mysuka_(?:session|oidc)=[^;]*" ""
+			header_down -Server
+		}
+	}
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	# portal-api: SSO, widget, JWKS
+	@api path /api/* /.well-known/jwks.json /healthz
+	handle @api {
+		reverse_proxy portal-api:8000 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	# SISKA: tanpa cache, tidak boleh di-iframe (header diset Caddy sehingga pasti ikut pada respons proxy)
+	handle /siska* {
+		reverse_proxy {$SISKA_ORIGIN} {
+			header_up Host {upstream_hostport}
+			header_up X-Forwarded-For {remote_host}
+			header_up Cookie "(?:^|;\s*)(?:__Host-)?mysuka_(?:session|oidc)=[^;]*" ""
+			header_down Cache-Control "no-store"
+			header_down X-Frame-Options "DENY"
+			header_down Referrer-Policy "same-origin"
+			header_down -Server
+		}
+	}
+
+	import service {$SUKAKETEMU_ORIGIN} /sukaketemu*
+	import service {$CAMPUSFIX_ORIGIN} /campusfix*
+	import service {$ARCHIVE_ORIGIN} /archive*
+	import service {$PAAS_ORIGIN} /paas*
+
+	# Portal (Next.js)
+	handle {
+		reverse_proxy portal-web:3000
+	}
+}

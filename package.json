@@ -1,0 +1,44 @@
+{
+  "name": "mysuka-portal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.9"
+  },
+  "scripts": {
+    "dev": "npm run assets && next dev",
+    "build": "npm run assets:check && npm run assets && next build",
+    "start": "next start",
+    "assets": "node design-system/build.mjs && node scripts/build-navbar.mjs",
+    "assets:check": "node design-system/build.mjs --check",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "lhci": "lhci autorun",
+    "quality": "npm run assets:check && npm run typecheck && npm run test && npm run api:test && npm run build",
+    "api:install": "python3 -m venv portal-api/.venv && portal-api/.venv/bin/pip install -r portal-api/requirements-dev.txt",
+    "api:dev": "cd portal-api && .venv/bin/uvicorn app.main:app --reload --port 8000 --env-file ../.env.local",
+    "api:test": "cd portal-api && .venv/bin/python -m pytest -q"
+  },
+  "dependencies": {
+    "jose": "^6.0.0",
+    "next": "15.5.29",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+    "@lhci/cli": "^0.15.0",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "15.5.29",
+    "jsdom": "^31.0.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.0.0"
+  }
+}

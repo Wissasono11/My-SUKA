@@ -1,124 +1,236 @@
-# 🎓 Repositori Pengembangan Superapp Kampus
-### Capstone Project — Tim Orkestrasi & Integrasi Portal Terpadu
+# MySuka Portal
 
-Selamat datang di repositori kerja **Subtim Inti Superapp Kampus**. Repositori ini berfungsi sebagai pusat koordinasi, pengembangan portal utama (*App-Shell Host*), manajemen autentikasi terpusat (SSO), serta standarisasi integrasi bagi 5 aplikasi layanan kampus.
+**MySuka Portal** adalah gerbang tunggal (_superapp portal_) untuk layanan digital civitas akademika UIN Sunan Kalijaga. Portal menghubungkan:
 
----
+- **SukaKetemu** — pencarian dan pelaporan barang;
+- **CampusFix** — pelaporan kerusakan fasilitas;
+- **SISKA** — layanan pengaduan dan perlindungan;
+- **Archive** — materi dan arsip akademik;
+- **PaaS Praktikum** — lingkungan dan manajemen praktikum.
 
-## 📌 Ringkasan Proyek
+Repository ini mengimplementasikan portal web, API identitas/SSO, routing edge, navbar bersama, design system, serta kontrak integrasi micro-app.
 
-Superapp Kampus menyatukan 5 aplikasi mandiri ke dalam satu pintu akses terpadu (`superapp.kampus.ac.id`):
-1. **SukaKetemu** *(Smart Lost & Found)*
-2. **CampusFix** *(Pelaporan Kerusakan Fasilitas Kampus)*
-3. **SISKA** *(Sistem Pengaduan Kekerasan Seksual - Pengamanan Khusus)*
-4. **Archive System** *(Pendukung Belajar Mengajar)*
-5. **PaaS Praktikum Kampus** *(Environment & Manajemen Praktikum)*
+> Dokumentasi teknis: [`docs/`](./docs/), terutama `ADOPSI-MICROAPP.md`, `KONTRAK-v1.1-USULAN.md`, `IDENTITAS-DAN-DATA-PENGGUNA.md`, dan `DEPLOY-VPS.md`.
 
-> **Prinsip Utama:** Masing-masing dari 5 tim tetap mengelola aplikasi dan databasenya sendiri. Repositori ini fokus membangun **portal induk (pintu masuk), tombol navigasi bersama (*App-Switcher*), serta jembatan login sekali masuk (Single Sign-On)**.
+## Ringkasan arsitektur
 
----
+```mermaid
+flowchart LR
+    User[Pengguna] --> Caddy[Caddy / TLS / Routing]
+    Caddy --> Web[Next.js Portal :3000]
+    Caddy --> API[FastAPI SSO/API :8000]
+    Caddy --> Services[Micro-app upstream]
 
-## 👥 Tim & Pembagian Peran (Core Team)
-
-Proyek ini digerakkan oleh tim inti dengan pembagian fokus kerja sebagai berikut:
-
-| Nama | Peran | Fokus & Tanggung Jawab Utama |
-| :--- | :--- | :--- |
-| **Bayu** | **Project Manager & Integration Lead** | • Memimpin koordinasi teknis dengan 5 ketua tim aplikasi (total 40 pengembang).<br>• Menyusun *Integration Contract* (aturan main integrasi & format data).<br>• Mengawal timeline sprint mingguan, manajemen risiko, dan memastikan rilis tepat waktu. |
-| **Hannah** | **UI/UX & Design System Lead** | • Merancang antarmuka Portal Utama (Halaman Login, Katalog Aplikasi, Dashboard, Profil).<br>• Menyusun panduan visual (*Mini Design System*) agar tampilan antar-aplikasi selaras.<br>• Memimpin pengujian alur pengguna (*User Acceptance Testing* / UAT). |
-| **Zamron** | **Frontend Engineer (App-Shell & Widgets)** | • Membangun website Portal Utama (*App-Shell Host*).<br>• Membuat komponen *Top Navigation Bar* (`<superapp-navbar>`) yang akan ditempelkan di 5 aplikasi.<br>• Mengembangkan kartu ringkasan informasi (*widgets*) di halaman beranda. |
-| **Chairul** | **Backend Engineer (SSO & Data Aggregator)** | • Membangun sistem login terpusat (*Central SSO Broker*) berbasis NIM & kata sandi.<br>• Menyediakan jembatan penukar token login untuk Express.js, Supabase, dan Firebase.<br>• Membuat API ringkasan (*BFF Aggregator*) untuk menyuplai data ke kartu beranda. |
-| **Salman** | **Jaringan & Infrastruktur (DevOps)** | *Peran ini saat ini masih terbuka. Untuk sementara, tugas setup domain, SSL, dan reverse proxy* |
-
----
-
-## 📅 Roadmap & Pembagian Kerja Mingguan (Sprint Plan)
-
-Target peluncuran resmi sistem adalah **14 Desember 2026 (`v1.0-prod`)** melalui 4 tahapan mingguan:
-
-### 📍 Pekan 1: Perencanaan, Kontrak Integrasi & Desain (17 – 22 Nov 2026)
-*Target: Fondasi & Kesepakatan Awal (`v0.1-alpha`)*
-- **Bayu:** Finalisasi dokumen kesepakatan integrasi bersama 5 ketua tim dan menyiapkan papan tugas (*task board*).
-- **Hannah:** Membuat rancangan desain UI (Figma) untuk Portal Utama dan panduan warna/komponen bersama.
-- **Zamron:** Menyiapkan kerangka dasar proyek Frontend portal utama dan struktur navigasi.
-- **Chairul:** Merancang skema data akun, struktur token login (JWT), dan spesifikasi API ringkasan data.
-- **Tim (Bayu & Chairul):** Menyiapkan domain utama kampus dan perencanaan rute link aplikasi.
-
----
-
-### 📍 Pekan 2: Pembuatan Portal Utama, Login Terpusat & Topbar (23 – 29 Nov 2026)
-*Target: Sistem Inti Mulai Berfungsi (`v0.2-beta`)*
-- **Bayu:** Memantau kesiapan 5 tim dalam menyesuaikan jalur URL aplikasi masing-masing.
-- **Hannah:** Uji tampilan desain di versi mobile dan merapikan aset ikon resmi dari 5 aplikasi.
-- **Zamron:** Menyelesaikan halaman Login, katalog 5 aplikasi, serta membuat script *Topbar* bersama.
-- **Chairul:** Mengaktifkan server autentikasi (login via NIM berhasil menerbitkan token terverifikasi).
-- **Tim:** Menguji penyematan *Topbar* di salah satu aplikasi uji coba.
-
----
-
-### 📍 Pekan 3: Integrasi dengan 5 Aplikasi Mitra (30 Nov – 6 Des 2026)
-*Target: Seluruh Aplikasi Terhubung (`v0.9-rc`)*
-- **Bayu:** Mengawal uji coba alur login dari portal menuju ke-5 aplikasi secara langsung.
-- **Hannah:** Melakukan evaluasi kenyamanan pengguna saat berpindah antar-aplikasi.
-- **Zamron:** Memasang kartu ringkasan status di beranda (misal: jumlah laporan di CampusFix / status di SukaKetemu).
-- **Chairul:** Menghubungkan API ringkasan data dari aplikasi mitra ke beranda portal.
-- **Tim:** Memastikan sistem pengaduan **SISKA** tetap terisolasi aman (tanpa bocor data ke beranda umum).
-
----
-
-### 📍 Pekan 4: Uji Coba Menyeluruh, Perbaikan & Peluncuran (7 – 14 Des 2026)
-*Target: Rilis Produksi Final (`v1.0-prod`)*
-- **Bayu:** Memimpin evaluasi akhir, memberlakukan **Code Freeze per 12 Desember 2026**, dan menyusun laporan proyek.
-- **Hannah:** Mendampingi sesi pengujian pengguna (UAT) bersama mahasiswa/dosen perwakilan.
-- **Zamron:** Memperbaiki bug tampilan, memastikan portal ringan, dan responsif di semua perangkat.
-- **Chairul:** Uji ketahanan server login dan memastikan tidak ada celah keamanan data akun.
-- **Seluruh Anggota:** **Go-Live produksi bersama pada 14 Desember 2026.**
-
----
-
-## 🤝 Alur Koordinasi dengan 5 Tim Layanan
-
-Karena proyek ini melibatkan 40 pengembang dari 5 aplikasi berbeda, alur koordinasi ditetapkan sebagai berikut:
-
-```
-[ Mahasiswa / Pengguna ]
-           │
-           ▼
-┌────────────────────────────────────────┐
-│  PORTAL UTAMA (Zamron & Hannah)       │ ◄─── Pintu Masuk Tunggal
-│  SSO LOGIN    (Chairul)                │
-└───────────────────┬────────────────────┘
-                    │  (Pindah Aplikasi & Tukar Sesi Login)
-     ┌──────────────┼──────────────┬──────────────┬──────────────┐
-     ▼              ▼              ▼              ▼              ▼
-[SukaKetemu]   [CampusFix]      [SISKA]      [Archive]      [PaaS]
- Tim Mitra 1    Tim Mitra 2   Tim Mitra 3   Tim Mitra 4   Tim Mitra 5
+    API -->|login Google OIDC| Google[Google OAuth]
+    API -->|JWT RS256 + JWKS| Web
+    API -->|handoff JWT| Services
+    Web -->|dashboard/widget| API
+    Services -->|widget summary| API
 ```
 
-1. **Jalur Komunikasi:** Seluruh komunikasi teknis keluar-masuk dipimpin oleh **Bayu (PM)** agar arahan tetap satu pintu.
-2. **Kebutuhan Tim Mitra:** Tim mitra hanya perlu menyisipkan 1 baris skrip *Topbar* buatan **Zamron** dan menerima kiriman data login dari sistem buatan **Chairul**.
-3. **Privasi SISKA:** Sesuai etika penanganan kekerasan seksual, layanan SISKA **tidak akan** menampilkan ringkasan data apa pun di beranda umum demi melindungi privasi korban.
+| Komponen | Teknologi | Peran |
+|---|---|---|
+| Portal web | Next.js 15, React 19, TypeScript | Halaman publik, dashboard, verifikasi sesi, navigasi dan widget |
+| Portal API | Python 3.12, FastAPI, PyJWT, HTTPX | Google OIDC, penerbitan JWT RS256, JWKS, silent launch, logout dan widget |
+| Edge/VPS | Caddy 2, Docker Compose | TLS, routing origin, header keamanan dan pembersihan cookie portal |
+| Micro-app | Framework apa pun | Layanan upstream dengan callback SSO dan endpoint widget opsional |
+| Navbar bersama | Web Component/Shadow DOM | Navigasi lintas layanan melalui `/assets/superapp-navbar.js` |
+| Design system | `design-system/build.mjs` + JSON | Token CSS/TypeScript/Dart dan pemeriksaan kontras |
 
----
+## Teknologi utama
 
-## 🛠️ Aturan Kolaborasi di GitHub
+- **Frontend:** Next.js App Router, React, TypeScript, `jose`, npm.
+- **Backend:** FastAPI, Pydantic, PyJWT, HTTPX, pytest.
+- **Keamanan identitas:** OAuth/OIDC Authorization Code + PKCE, cookie HttpOnly, RS256, JWKS, `jti` anti-replay, HMAC-SHA256 untuk id buram.
+- **Pengujian:** Node test runner, jsdom, tsx, pytest; Lighthouse CI tersedia.
+- **Distribusi:** Docker multi-stage, Docker Compose, Caddy, output Next.js `standalone`.
 
-Untuk menjaga kode tetap rapi dan mempermudah kerja sama:
+## Struktur repository
 
-1. **Struktur Branch:**
-   - `main`: Kode stabil yang sudah siap digunakan/diuji.
-   - `staging`: Tempat penggabungan hasil kerja mingguan tim.
-   - `feat/nama-fitur`: Branch kerja mandiri (contoh: `feat/halaman-login-zamron`, `feat/api-sso-chairul`).
-2. **Pull Request (PR):**
-   - Setiap fitur yang selesai wajib dibuatkan Pull Request ke branch `staging`.
-   - Wajib di-*review* minimal oleh 1 rekan tim sebelum di-*merge*.
-3. **Jadwal Sinkronisasi:**
-   - *Weekly Sync:* Evaluasi pencapaian target setiap akhir pekan bersama seluruh anggota.
-   - *Code Freeze:* **12 Desember 2026** (tidak ada penambahan fitur baru, hanya perbaikan bug minor).
+```text
+src/
+  app/                 Halaman App Router: beranda, login, dashboard, layanan, dll.
+  components/          Header, footer, kartu dan ikon layanan.
+  lib/                 Konfigurasi layanan, sesi, JWT, widget, dan redirect aman.
+  middleware.ts        Menghapus cookie portal sebelum request diteruskan ke micro-app.
+portal-api/
+  app/                 API FastAPI, SSO, identitas, kunci, token dan widget.
+  tests/               Pengujian Python untuk API, keamanan, identitas dan widget.
+design-system/         Sumber dan generator token lintas frontend.
+navbar/                Implementasi komponen <superapp-navbar>.
+scripts/               Build navbar serta upstream tiruan.
+public/assets/         Aset bersama, navbar dan token CSS yang sudah dibangun.
+infra/                 Docker Compose produksi dan Caddyfile.
+docs/                  Kontrak, adopsi, identitas dan panduan deploy.
+tests/                 Pengujian Node/TypeScript untuk cookie, navbar, token dan JWKS.
+```
 
----
+## Alur aplikasi
 
-<p align="center">
-  <b>Subtim Inti Orkestrasi Superapp Kampus</b><br>
-  Fakultas Sains dan Teknologi • Semester 7 Capstone Project
-</p>
+### Login
+
+1. Pengguna membuka `/login` atau halaman yang mengarah ke dashboard.
+2. `/api/sso/login` memulai OAuth Google dengan state, nonce dan PKCE.
+3. Google mengirim pengguna ke `/api/sso/callback`.
+4. FastAPI menukar authorization code, memvalidasi ID token, menerapkan pembatasan domain, lalu menerbitkan cookie sesi portal.
+5. Next.js memverifikasi cookie menggunakan JWKS dari FastAPI; Next.js **tidak menyimpan atau memiliki kunci privat**.
+
+### Navigasi ke layanan
+
+1. Dashboard membuka `/api/sso/launch?app=<service>`.
+2. API memvalidasi cookie sesi dan membentuk JWT serah-terima berttl pendek (120 detik).
+3. Pengguna diarahkan ke `/<service>/sso-callback?token=<jwt>`.
+4. Micro-app memvalidasi signature, issuer, audience, `exp`, `jti` dan `svc`, lalu membuat sesi sendiri.
+5. Portal menyingkirkan cookie portal sebelum meneruskan trafik layanan; SISKA menerima isolasi tambahan.
+
+### Dashboard widget
+
+Dashboard memanggil `/api/widget/summary`. FastAPI mengumpulkan widget layanan secara paralel, memberi timeout tiap widget 1,5 detik, lalu menyembunyikan hasil yang gagal atau tidak valid. SISKA sengaja dikecualikan. Hasil widget di-cache dalam proses selama 45 detik.
+
+## Identitas dan privasi
+
+MySuka tidak menyimpan password dan tidak memiliki database pengguna. ID global dibentuk sebagai:
+
+```text
+usr_ + HMAC-SHA256(IDENTITY_HMAC_SECRET, "v1:<scope>:<campus_id>")[0:32]
+```
+
+- ID global digunakan oleh layanan biasa.
+- SISKA dapat menggunakan ID khusus layanan sehingga tidak mudah dicocokkan lintas layanan.
+- Klaim penuh berisi identitas portal yang diperlukan; layanan privasi hanya menerima ID dan peran.
+- `campus_id` sementara menggunakan email sampai tersedia ID permanen dari sumber kampus.
+- Token sesi berisi `jti`; layanan wajib menolak replay `jti` sesuai kontrak integrasi.
+
+## Setup lokal
+
+### Prasyarat
+
+- Node.js 20.9+ (Docker memakai Node 22).
+- Python 3.12+ direkomendasikan.
+- Google OAuth credential untuk pengujian login sungguhan; login dev tidak memerlukan Google.
+
+### 1. Konfigurasi environment
+
+```bash
+cp .env.example .env.local
+```
+
+Isi minimal variabel berikut untuk pengembangan:
+
+```env
+ENV=development
+APP_BASE_URL=http://localhost:3000
+SSO_ISSUER=http://localhost:3000
+API_ORIGIN=http://127.0.0.1:8000
+SSO_JWKS_URL=http://127.0.0.1:8000/.well-known/jwks.json
+DEV_LOGIN=1
+```
+
+Tanpa `DEV_LOGIN=1`, API meminta konfigurasi Google melalui `GOOGLE_CLIENT_ID` dan `GOOGLE_CLIENT_SECRET`. Daftar lengkap tersedia di `.env.example`.
+
+### 2. Instal dan jalankan
+
+```bash
+npm install
+npm run api:install
+
+# Terminal 1
+npm run api:dev
+
+# Terminal 2
+npm run dev
+```
+
+Buka `http://localhost:3000`.
+
+## Perintah pengembangan
+
+| Perintah | Fungsi |
+|---|---|
+| `npm run dev` | Men-generate aset lalu menjalankan Next.js dev server |
+| `npm run build` | Validasi aset, generate aset, lalu build Next.js produksi |
+| `npm run start` | Menjalankan build Next.js (`output: standalone`)
+| `npm run lint` | ESLint seluruh workspace |
+| `npm run typecheck` | Pemeriksaan TypeScript tanpa emit |
+| `npm run test` | Test Node/TypeScript di `tests/*.test.ts` |
+| `npm run api:test` | pytest pada `portal-api/tests` |
+| `npm run quality` | Aset + typecheck + test Node + test Python + build |
+| `npm run lhci` | Lighthouse CI (memerlukan Chrome) |
+| `npm run assets` | Build token CSS/TS/Dart dan bundle navbar |
+| `npm run assets:check` | Memastikan aset hasil build sinkron dengan sumber |
+
+## Pengujian
+
+Test Node mencakup cookie, navbar, kontras/teks token, verifikasi JWKS dan pembatasan redirect. Test Python mencakup:
+
+- JWKS dan JWT RS256;
+- identitas serta pembatasan scope layanan;
+- sesi dan dev login;
+- OIDC/rate limit/CSRF;
+- timeout dan validasi widget;
+- endpoint SSO dan health check.
+
+Jalankan semua pemeriksaan:
+
+```bash
+npm run quality
+```
+
+## Deployment VPS
+
+Topologi produksi:
+
+```text
+Internet
+  -> Caddy (80/443, TLS otomatis)
+     -> /api/* dan /.well-known/jwks.json -> portal-api:8000
+     -> /siska* dan layanan lain -> upstream micro-app
+     -> rute lainnya -> portal-web:3000
+```
+
+Langkah ringkas:
+
+```bash
+cp .env.example .env.production
+# Isi domain, origin layanan, Google OAuth, private key, dan identity secret.
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out priv.pem
+openssl rand -hex 32
+
+docker compose --env-file .env.production -f infra/docker-compose.yml up -d --build
+```
+
+Validasi konfigurasi Caddy sebelum deploy bila binary tersedia:
+
+```bash
+caddy validate --config infra/Caddyfile --adapter caddyfile
+```
+
+Panduan lengkap, DNS, OAuth redirect URI, health check, rotasi kunci dan operasi tersedia di [`docs/DEPLOY-VPS.md`](./docs/DEPLOY-VPS.md).
+
+## Keamanan
+
+- Cookie sesi API bersifat `HttpOnly`, `SameSite=Lax`; produksi memakai `Secure` dan default `__Host-mysuka_session`.
+- Logout memakai POST serta pemeriksaan Origin.
+- Return URL disaring agar tidak melakukan open redirect.
+- Handoff JWT berttl 120 detik, scope layanan dan `jti`.
+- SISKA tidak mendapat widget dan mendapat cookie/header isolasi ketat.
+- CSP, HSTS, `nosniff`, frame denial dan permission policy diterapkan oleh Next/Caddy.
+- Secret/kunci privat tidak ditempatkan di Next.js atau browser.
+- Endpoint dokumentasi OpenAPI dinonaktifkan di produksi.
+
+## Batasan saat ini
+
+- Google adalah penyedia login saat ini; adaptor kampus/SSO masih dapat ditambahkan karena desain identitas memisahkan penyedia dari pembentukan JWT.
+- `deriveUser` masih memakai email sebagai `campus_id` dan belum membaca fakultas/prodi dari direktori kampus.
+- JWKS saat ini hanya memuat satu kunci; rotasi kunci tanpa downtime membutuhkan dukungan multi-kunci.
+- Rate limit berada dalam memori satu worker FastAPI. Replikasi produksi membutuhkan Redis atau rate limiting pada edge.
+- Penggantian token handoff di URL menjadi authorization code + PKCE direkomendasikan pada kontrak v1.1.
+- Lighthouse dan validasi Caddy belum dapat dijalankan di semua lingkungan tanpa Chrome/Caddy.
+- CSP masih memakai `'unsafe-inline'` untuk skrip karena Next menyisipkan inline script.
+
+## Kontribusi
+
+1. Jalankan `npm run lint`, `npm run typecheck`, `npm run test` dan `npm run api:test`.
+2. Pastikan `npm run assets:check` berhasil setelah mengubah token atau navbar.
+3. Jalankan `npm run build` sebelum deploy.
+4. Ikuti kontrak pada `docs/ADOPSI-MICROAPP.md` ketika menambah atau memodifikasi micro-app.

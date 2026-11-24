@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env*
+!.env.example
+*.tsbuildinfo
+.lighthouseci/
+public/assets/superapp-navbar.js
+portal-api/.venv/
+__pycache__/
+.pytest_cache/
