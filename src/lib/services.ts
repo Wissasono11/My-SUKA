@@ -1,4 +1,4 @@
-export type ServiceId = "sukaketemu" | "campusfix" | "siska" | "archive" | "paas";
+export type ServiceId = "sukaketemu" | "campusfix" | "siska" | "archive" | "paas" | "terassc";
 
 export interface Service {
   id: ServiceId;
@@ -17,6 +17,7 @@ export const SERVICES: readonly Service[] = [
   { id: "siska", name: "SISKA", title: "Layanan Pengaduan & Perlindungan", description: "Akses layanan pengaduan kekerasan seksual dengan mengutamakan privasi.", href: "/siska", widget: false, originEnv: "SISKA_ORIGIN" },
   { id: "archive", name: "Archive", title: "Akses Materi & Arsip Akademik", description: "Temukan dan unduh materi serta arsip untuk mendukung kegiatan belajar mengajar.", href: "/archive", widget: true, originEnv: "ARCHIVE_ORIGIN" },
   { id: "paas", name: "PaaS Praktikum", title: "Manajemen Praktikum & Lingkungan Uji Coba", description: "Kelola kebutuhan praktikum dan lingkungan uji coba dalam satu tempat.", href: "/paas", widget: true, originEnv: "PAAS_ORIGIN" },
+  { id: "terassc", name: "TERAS SC", title: "Layanan & Informasi Student Center", description: "Akses layanan TERAS Student Center melalui portal My-SUKA.", href: "/terassc", widget: false, originEnv: "TERASSC_ORIGIN" },
 ] as const;
 
 export const isServiceId = (v: string): v is ServiceId => SERVICES.some((s) => s.id === v);

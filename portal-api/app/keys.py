@@ -15,7 +15,13 @@ ALG = "RS256"
 @lru_cache(maxsize=1)
 def _load(pem: str | None, production: bool, kid: str):
     if pem:
-        private = serialization.load_pem_private_key(pem.encode(), password=None)
+        try:
+            private = serialization.load_pem_private_key(pem.encode(), password=None)
+        except (ValueError, TypeError) as exc:
+            if production:
+                raise RuntimeError("SSO_PRIVATE_KEY_PEM tidak berisi PEM kunci privat RSA yang valid") from exc
+            log.warning("SSO_PRIVATE_KEY_PEM tidak valid; memakai kunci sementara (hanya untuk pengembangan)")
+            private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     elif production:
         raise RuntimeError("SSO_PRIVATE_KEY_PEM wajib di produksi")
     else:

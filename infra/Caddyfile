@@ -52,6 +52,7 @@
 	import service {$CAMPUSFIX_ORIGIN} /campusfix*
 	import service {$ARCHIVE_ORIGIN} /archive*
 	import service {$PAAS_ORIGIN} /paas*
+	import service {$TERASSC_ORIGIN} /terassc*
 
 	# Portal (Next.js)
 	handle {

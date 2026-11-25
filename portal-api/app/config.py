@@ -46,7 +46,7 @@ class Settings:
 def get_settings() -> Settings:
     e = os.environ
     base = e.get("APP_BASE_URL", "http://localhost:3000").rstrip("/")
-    pem = e.get("SSO_PRIVATE_KEY_PEM")
+    pem = (e.get("SSO_PRIVATE_KEY_PEM") or "").strip() or None
     return Settings(
         env=e.get("ENV", "development"),
         base_url=base,

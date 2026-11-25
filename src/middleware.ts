@@ -17,4 +17,4 @@ export function middleware(req: NextRequest) {
   return NextResponse.next({ request: { headers } });
 }
 
-export const config = { matcher: ["/(sukaketemu|campusfix|siska|archive|paas)", "/(sukaketemu|campusfix|siska|archive|paas)/:path*"] };
+export const config = { matcher: ["/(sukaketemu|campusfix|siska|archive|paas|terassc)", "/(sukaketemu|campusfix|siska|archive|paas|terassc)/:path*"] };

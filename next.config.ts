@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const origin = (name: string) => (process.env[name] ?? "").replace(/\/+$/, "");
 const SERVICES = [
-  ["sukaketemu", "SUKAKETEMU_ORIGIN"], ["campusfix", "CAMPUSFIX_ORIGIN"], ["siska", "SISKA_ORIGIN"], ["archive", "ARCHIVE_ORIGIN"], ["paas", "PAAS_ORIGIN"],
+  ["sukaketemu", "SUKAKETEMU_ORIGIN"], ["campusfix", "CAMPUSFIX_ORIGIN"], ["siska", "SISKA_ORIGIN"], ["archive", "ARCHIVE_ORIGIN"], ["paas", "PAAS_ORIGIN"], ["terassc", "TERASSC_ORIGIN"],
 ] as const;
 
 const SECURITY = [
@@ -39,7 +39,7 @@ const config: NextConfig = {
   async headers() {
     return [
       // Portal: tidak boleh di-iframe, CSP ketat.
-      { source: "/((?!sukaketemu|campusfix|siska|archive|paas).*)", headers: [...SECURITY, { key: "Content-Security-Policy", value: PORTAL_CSP }, { key: "X-Frame-Options", value: "DENY" }, { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" }] },
+      { source: "/((?!sukaketemu|campusfix|siska|archive|paas|terassc).*)", headers: [...SECURITY, { key: "Content-Security-Policy", value: PORTAL_CSP }, { key: "X-Frame-Options", value: "DENY" }, { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" }] },
       // SISKA (blueprint: isolasi ketat). CATATAN: header ini tidak terbukti ikut pada respons yang di-proxy lewat
       // rewrite (diuji lokal dengan next start). Pasang juga di aplikasi SISKA sendiri dan/atau di edge (Cloudflare).
       { source: "/siska/:path*", headers: [{ key: "Cache-Control", value: "no-store" }, { key: "X-Frame-Options", value: "DENY" }, { key: "Referrer-Policy", value: "same-origin" }] },

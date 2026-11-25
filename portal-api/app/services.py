@@ -16,6 +16,7 @@ SERVICES: tuple[Service, ...] = (
     Service("siska", "SISKA", "/siska", False, "SISKA_ORIGIN"),
     Service("archive", "Archive", "/archive", True, "ARCHIVE_ORIGIN"),
     Service("paas", "PaaS Praktikum", "/paas", True, "PAAS_ORIGIN"),
+    Service("terassc", "TERAS SC", "/terassc", False, "TERASSC_ORIGIN"),
 )
 
 

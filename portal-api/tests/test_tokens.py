@@ -57,3 +57,22 @@ def test_produksi_tanpa_kunci_gagal_cepat(monkeypatch):
     keys._load.cache_clear()
     with pytest.raises(RuntimeError):
         keys.load_keys()
+
+
+def test_pem_malformed_di_pengembangan_memakai_kunci_temporary(monkeypatch):
+    monkeypatch.setenv("ENV", "development")
+    monkeypatch.setenv("SSO_PRIVATE_KEY_PEM", "bukan-pem")
+    from app import keys
+    keys._load.cache_clear()
+    private, jwk = keys.load_keys()
+    assert private is not None
+    assert jwk["alg"] == "RS256"
+
+
+def test_pem_malformed_di_produksi_gagal_cepat(monkeypatch):
+    monkeypatch.setenv("ENV", "production")
+    monkeypatch.setenv("SSO_PRIVATE_KEY_PEM", "bukan-pem")
+    from app import keys
+    keys._load.cache_clear()
+    with pytest.raises(RuntimeError, match="PEM kunci privat RSA"):
+        keys.load_keys()

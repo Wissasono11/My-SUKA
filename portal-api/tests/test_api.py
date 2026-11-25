@@ -119,3 +119,10 @@ def test_logout_dev_menerima_loopback_dan_produksi_menolak(client, monkeypatch):
     assert r.status_code == 403 and "APP_BASE_URL" in r.text
     monkeypatch.setenv("ALLOWED_ORIGINS", "http://127.0.0.1:3000")
     assert client.post("/api/sso/logout", headers=lo).status_code == 303
+
+
+def test_launch_terassc_berhasil(client, session_cookie):
+    client.cookies.update(session_cookie)
+    r = client.get("/api/sso/launch", params={"app": "terassc"})
+    assert r.status_code == 302
+    assert r.headers["location"].startswith("https://mysuka.test/terassc/sso-callback?token=")

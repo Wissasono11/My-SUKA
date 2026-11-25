@@ -13,7 +13,7 @@ def make(handler):
 
 
 def test_lima_layanan_sesuai_kontrak():
-    assert [s.id for s in SERVICES] == ["sukaketemu", "campusfix", "siska", "archive", "paas"]
+    assert [s.id for s in SERVICES] == ["sukaketemu", "campusfix", "siska", "archive", "paas", "terassc"]
 
 
 def test_siska_tidak_pernah_ditarik():
