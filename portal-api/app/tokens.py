@@ -45,7 +45,7 @@ def verify_token(token: str) -> dict[str, Any] | None:
     return user
 
 
-def derive_user(email: str, name: str) -> dict[str, Any]:
+def derive_user(email: str, name: str, picture_url: str | None = None) -> dict[str, Any]:
     """Adaptor sementara untuk login Google. campus_id = email sampai kampus menyediakan id permanen."""
     s = get_settings()
     local, _, domain = email.lower().partition("@")
@@ -59,4 +59,7 @@ def derive_user(email: str, name: str) -> dict[str, Any]:
         campus_id=email.lower(), email=email, name=name, role=role,
         nim=local if role == "MAHASISWA" else None, nip=local if role != "MAHASISWA" else None,
     )
-    return session_user(cu)
+    user = session_user(cu)
+    if picture_url and picture_url.startswith("https://"):
+        user["picture_url"] = picture_url
+    return user

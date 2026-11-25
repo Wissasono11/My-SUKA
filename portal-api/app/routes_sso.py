@@ -38,7 +38,7 @@ async def login(request: Request, returnTo: str | None = None, s: Settings = Dep
 
     if not s.google_configured and not s.production and s.dev_login:  # hanya pengembangan lokal
         resp = _redirect(f"{s.base_url}{target}")
-        user = {**derive_user("23106050059@student.uin-suka.ac.id", "Radinka Rafie"), "faculty": "SAINTEK", "department": "Informatika"}
+        user = {**derive_user("23106050017@student.uin-suka.ac.id", "Ahmad Zamroni"), "faculty": "SAINTEK", "department": "Informatika"}
         _set_session(resp, s, user)
         return resp
     if not s.google_configured:
@@ -82,7 +82,7 @@ async def callback(
         log.error("callback gagal: %s", type(e).__name__)  # tanpa token/kode di log
         return fail("denied")
     resp = _redirect(f"{s.base_url}{safe_return_to(return_to)}")
-    _set_session(resp, s, derive_user(claims["email"], claims.get("name") or claims["email"]))
+    _set_session(resp, s, derive_user(claims["email"], claims.get("name") or claims["email"], claims.get("picture")))
     resp.delete_cookie("mysuka_oidc", path="/api/sso")
     return resp
 

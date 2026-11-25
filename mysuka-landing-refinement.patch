@@ -1,0 +1,246 @@
+diff --git a/src/app/globals.css b/src/app/globals.css
+index 05fa842..c0d422a 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -162,3 +162,114 @@ a{color:inherit}
+   .footer-contact{grid-column:auto}
+ }
+ @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
++
++/* Follow-up refinements: readable scale, accessible login, animated service carousel */
++body{font-size:16px}
++.hero{min-height:560px;padding-top:50px;padding-bottom:62px}
++.hero-frame{min-height:450px}
++.hero-brand{font-size:14px;padding:4px 15px 4px 5px}
++.hero h1{font-size:clamp(36px,4vw,48px);max-width:980px}
++.hero-lead{font-size:15px;max-width:760px}
++.hero-login{font-size:13px;padding:12px 23px 12px 25px}
++.services-section{min-height:900px;padding-top:54px}
++.eyebrow{font-size:13px}
++.section-heading h2{font-size:clamp(27px,2.8vw,34px)}
++.section-heading>p:last-child{font-size:13px}
++.service-stage{max-width:930px;height:450px;margin-top:46px}
++.showcase-card{width:218px;min-height:270px;padding:27px 19px 17px;border-radius:12px;transition:transform .62s cubic-bezier(.22,.75,.25,1),opacity .45s ease,box-shadow .45s ease}
++.showcase-card h3{font-size:13px}
++.showcase-card p{font-size:10px;line-height:1.48}
++.showcase-number{font-size:9px}
++.showcase-icon{height:92px}
++.showcase-link{font-size:9px;padding-top:11px}
++.showcase-featured{width:198px;min-height:286px;padding:28px 20px 17px}
++.showcase-featured .showcase-icon{height:100px}
++.showcase-featured h3{font-size:14px}
++.showcase-featured p{font-size:10px}
++.showcase-center{top:50%;left:50%;z-index:6;transform:translate(-50%,-50%) scale(1)}
++.showcase-left-1{top:50%;left:50%;z-index:4;transform:translate(calc(-50% - 164px),-48%) scale(.96)}
++.showcase-left-2{top:50%;left:50%;z-index:2;transform:translate(calc(-50% - 326px),-45%) scale(.9)}
++.showcase-right-1{top:50%;left:50%;z-index:4;transform:translate(calc(-50% + 164px),-48%) scale(.96)}
++.showcase-right-2{top:50%;left:50%;z-index:2;transform:translate(calc(-50% + 326px),-45%) scale(.9)}
++.showcase-card.is-hidden{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.72)}
++.showcase-card.is-visible{opacity:1}
++.stage-arrow{top:47%;z-index:10;width:42px;height:42px;display:grid;place-items:center;border:1px solid #dce9e0;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 3px 12px #173c2514;font-size:32px;cursor:pointer;transition:background .2s,transform .2s,box-shadow .2s}
++.stage-arrow:hover{background:#e8f3ec;transform:scale(1.08);box-shadow:0 5px 15px #173c2522}
++.stage-arrow-left{left:-48px}.stage-arrow-right{right:-48px}
++.showcase-controls{position:absolute;left:50%;bottom:1px;z-index:12;display:flex;align-items:center;gap:14px;transform:translateX(-50%)}
++.showcase-counter{font-size:11px;font-weight:800;letter-spacing:.08em;color:#47765b;font-variant-numeric:tabular-nums}
++.showcase-dots{display:flex;align-items:center;gap:6px}
++.showcase-dots button{width:7px;height:7px;padding:0;border:0;border-radius:99px;background:#c9dcd0;cursor:pointer;transition:width .3s,background .3s}
++.showcase-dots button.is-active{width:22px;background:#176d45}
++.connected-section{min-height:470px}
++.connected-inner{max-width:1280px;gap:64px}
++.connected-copy h2{font-size:clamp(28px,2.8vw,36px)}
++.connected-copy>p:not(.hero-brand){font-size:14px}
++.checks li{font-size:12px}
++.site-footer{font-size:12px}
++.footer-inner{max-width:1280px;padding-top:52px;padding-bottom:48px;gap:82px}
++.footer-brand{font-size:16px}.footer-about>p:last-child,.footer-social>p{font-size:11px}.footer-title{font-size:11px}.footer-contact p{font-size:10px}.footer-bottom{font-size:10px}
++
++/* Login page styles are intentionally isolated from the landing-page layout. */
++.login-page{min-height:560px;padding:76px 22px 90px;display:grid;place-items:center;background:radial-gradient(circle at 15% 10%,rgba(25,125,77,.09),transparent 32%),radial-gradient(circle at 90% 80%,rgba(25,125,77,.08),transparent 30%),#f5f8f6}
++.login-card{width:min(100%,510px);padding:48px 46px 42px;border:1px solid #e2ebe5;border-radius:22px;background:#fff;box-shadow:0 18px 55px rgba(15,65,39,.09);text-align:center}
++.login-emblem{width:58px;height:58px;margin:0 auto 20px;display:grid;place-items:center;border-radius:18px;background:#e7f3eb;color:#176d45;font-size:28px}
++.login-eyebrow{font-size:10px;font-weight:800;letter-spacing:.12em;color:#548267}
++.login-card h1{margin-top:12px;font-size:clamp(29px,4vw,36px);line-height:1.2;font-weight:800;letter-spacing:-.8px;color:#193426}
++.login-card h1 span{color:#197449}
++.login-description{max-width:370px;margin:14px auto 0;color:#718078;font-size:14px;line-height:1.65}
++.login-submit{min-height:54px;margin-top:30px;padding:0 20px;display:flex;align-items:center;justify-content:center;gap:12px;border-radius:12px;background:#11643f;color:#fff;text-decoration:none;font-size:14px;font-weight:700;box-shadow:0 7px 16px rgba(17,100,63,.2);transition:transform .2s,background .2s,box-shadow .2s}
++.login-submit:hover{transform:translateY(-2px);background:#0b5736;box-shadow:0 10px 22px rgba(17,100,63,.25)}
++.login-submit svg{width:20px;height:20px;flex:none}
++.login-submit span{margin-left:auto;font-size:20px}
++.login-alert{margin-top:20px;padding:12px 14px;border:1px solid #f0d2c8;border-radius:10px;background:#fff5f1;color:#9b3d26;font-size:13px;text-align:left}
++.login-note{margin-top:19px;color:#829087;font-size:11px}
++
++/* Header remains styled on secondary pages such as /login. */
++.container{width:min(100% - 40px,1200px);margin-inline:auto}
++.site-header{position:relative;z-index:20;background:#fff;border-bottom:1px solid #e8eee9}
++.header-inner{min-height:76px;display:flex;align-items:center;gap:22px}
++.brand{display:inline-flex;align-items:center;gap:10px;color:#155b3a;text-decoration:none;font-size:18px;font-weight:800}
++.brand-mark{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#126640;color:#fff}
++.nav{display:flex;gap:8px;margin-left:auto}
++.nav a{padding:10px 13px;border-radius:9px;color:#627369;text-decoration:none;font-size:13px;font-weight:650}
++.nav a:hover,.nav a[aria-current="page"]{background:#eaf4ed;color:#176d45}
++.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 18px;border-radius:10px;text-decoration:none;font-size:13px;font-weight:700}
++.btn-primary{background:#126640;color:#fff}
++.btn-primary:hover{background:#0b5736}
++@media(max-width:760px){
++ .hero{min-height:430px;padding:20px 16px 28px}
++ .hero-frame{min-height:375px}
++ .hero h1{font-size:clamp(29px,7.2vw,38px)}
++ .hero-lead{font-size:13px}
++ .services-section{min-height:auto;padding:44px 14px 55px}
++ .service-stage{height:370px;max-width:100%;margin-top:24px;overflow:hidden}
++ .showcase-card{width:190px;min-height:250px;padding:22px 15px 14px}
++ .showcase-featured{width:190px;min-height:260px}
++ .showcase-left-1{transform:translate(calc(-50% - 120px),-47%) scale(.82)}
++ .showcase-right-1{transform:translate(calc(-50% + 120px),-47%) scale(.82)}
++ .showcase-left-2,.showcase-right-2{opacity:0!important;pointer-events:none}
++ .stage-arrow{width:36px;height:36px;top:44%;font-size:27px}
++ .stage-arrow-left{left:0}.stage-arrow-right{right:0}
++ .showcase-controls{bottom:0}
++ .connected-section{padding:30px 20px 0}
++ .connected-inner{grid-template-columns:1fr;gap:12px}
++ .portal-mockup{order:2}
++ .connected-copy{padding:0 0 10px}
++ .footer-inner{grid-template-columns:1fr 1fr;gap:28px 22px;padding:34px 22px}
++ .footer-contact{grid-column:1/-1}
++ .login-page{min-height:500px;padding:52px 18px 64px}
++ .login-card{padding:38px 24px 32px}
++ .header-inner{min-height:66px;gap:12px}
++ .nav{gap:0}.nav a{padding:9px 8px;font-size:11px}
++ .brand{font-size:16px}.brand-mark{width:30px;height:30px}
++}
++@media(max-width:420px){
++ .header-inner{width:calc(100% - 24px)}
++ .nav a{font-size:10px;padding-inline:6px}
++ .header-inner>.btn{padding-inline:10px;font-size:11px}
++ .footer-inner{grid-template-columns:1fr;gap:24px}
++ .footer-contact{grid-column:auto}
++}
++.showcase-card{margin-top:0}
++@media(max-width:760px){.service-showcase{position:absolute;inset:0;display:block;min-width:0;width:100%;height:100%;padding:0}.showcase-card{position:absolute;top:50%;left:50%;margin:0}.showcase-card.is-hidden{display:flex}.showcase-left-2,.showcase-right-2{display:none}}
+diff --git a/src/app/login/page.tsx b/src/app/login/page.tsx
+index c7867ad..4bac93b 100644
+--- a/src/app/login/page.tsx
++++ b/src/app/login/page.tsx
+@@ -23,13 +23,20 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
+   return (
+     <>
+       <SiteHeader />
+-      <main id="konten" className="section">
+-        <div className="container narrow">
+-          <h1 className="section-title">Masuk ke MySuka</h1>
+-          <p className="section-lead">Gunakan akun Google UIN Sunan Kalijaga Anda.</p>
+-          {message && <p role="alert" className="alert">{message}</p>}
+-          <a className="btn btn-primary btn-block" href={`/api/sso/login?returnTo=${encodeURIComponent(target)}`}>Masuk dengan akun UIN</a>
+-        </div>
++      <main id="konten" className="login-page">
++        <section className="login-card" aria-labelledby="login-title">
++          <span className="login-emblem" aria-hidden="true">✦</span>
++          <p className="login-eyebrow">PORTAL TERPADU UIN SUNAN KALIJAGA</p>
++          <h1 id="login-title">Masuk ke <span>MySuka</span></h1>
++          <p className="login-description">Gunakan akun Google resmi UIN Sunan Kalijaga untuk mengakses seluruh layanan digital kampus.</p>
++          {message && <p role="alert" className="login-alert">{message}</p>}
++          <a className="login-submit" href={`/api/sso/login?returnTo=${encodeURIComponent(target)}`}>
++            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.6 12.23c0-.72-.06-1.25-.19-1.8H12v3.27h5.52a4.72 4.72 0 0 1-2.05 3.1v2.12h3.32c1.94-1.79 2.81-4.42 2.81-6.69Z"/><path fill="currentColor" d="M12 22c2.7 0 4.97-.9 6.63-2.45l-3.32-2.12c-.92.62-2.1.99-3.31.99-2.55 0-4.72-1.72-5.5-4.03H3.07v2.19A10 10 0 0 0 12 22Z"/><path fill="currentColor" d="M6.5 14.39A6.02 6.02 0 0 1 6.18 12c0-.83.14-1.64.32-2.39V7.42H3.07A10 10 0 0 0 2 12c0 1.65.4 3.2 1.07 4.58l3.43-2.19Z"/><path fill="currentColor" d="M12 5.58c1.47 0 2.78.5 3.82 1.5l2.86-2.86A9.57 9.57 0 0 0 12 2a10 10 0 0 0-8.93 5.42L6.5 9.61c.78-2.31 2.95-4.03 5.5-4.03Z"/></svg>
++            Masuk dengan akun Google UIN
++            <span aria-hidden="true">→</span>
++          </a>
++          <p className="login-note">Akses aman melalui Single Sign-On (SSO)</p>
++        </section>
+       </main>
+       <SiteFooter />
+     </>
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 771fde7..3d05eb2 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -1,5 +1,6 @@
+ import Link from "next/link";
+ import ServiceIcon from "@/components/ServiceIcon";
++import ServiceShowcase from "@/components/ServiceShowcase";
+ import SiteFooter from "@/components/SiteFooter";
+ import { SERVICES } from "@/lib/services";
+ 
+@@ -49,21 +50,7 @@ export default function HomePage() {
+             <p>Temukan berbagai layanan digital yang dirancang untuk mendukung aktivitas civitas akademika<br className="desktop-break" /> UIN Sunan Kalijaga</p>
+           </div>
+ 
+-          <div className="service-stage" aria-label="Layanan digital MySuka">
+-            <span className="stage-arrow stage-arrow-left" aria-hidden="true">‹</span>
+-            <ul className="service-showcase">
+-              {featuredServices.map((service, index) => (
+-                <li className={`showcase-card showcase-card-${index + 1}${service.id === "siska" ? " showcase-featured" : ""}`} key={service.id}>
+-                  <span className="showcase-number">{String(index + 1).padStart(2, "0")}</span>
+-                  <span className="showcase-icon"><ServiceIcon id={service.id} size={index === 2 ? 62 : 52} /></span>
+-                  <h3>{service.title}</h3>
+-                  <p>{service.description}</p>
+-                  <a className="showcase-link" href={`/api/sso/launch?app=${service.id}`}>{service.name}<span className="sr-only"> (masuk otomatis)</span></a>
+-                </li>
+-              ))}
+-            </ul>
+-            <span className="stage-arrow stage-arrow-right" aria-hidden="true">›</span>
+-          </div>
++          <ServiceShowcase />
+         </section>
+ 
+         <section className="connected-section" aria-labelledby="genggam-title">
+diff --git a/src/components/ServiceShowcase.tsx b/src/components/ServiceShowcase.tsx
+new file mode 100644
+index 0000000..59c0ee2
+--- /dev/null
++++ b/src/components/ServiceShowcase.tsx
+@@ -0,0 +1,55 @@
++"use client";
++
++import { useState } from "react";
++import ServiceIcon from "@/components/ServiceIcon";
++import { SERVICES } from "@/lib/services";
++
++const featuredServices = SERVICES;
++const initialIndex = Math.max(0, featuredServices.findIndex((service) => service.id === "siska"));
++
++export default function ServiceShowcase() {
++  const [activeIndex, setActiveIndex] = useState(initialIndex);
++  const count = featuredServices.length;
++
++  const move = (direction: -1 | 1) => {
++    setActiveIndex((current) => (current + direction + count) % count);
++  };
++
++  return (
++    <div className="service-stage" aria-label="Layanan digital MySuka">
++      <button className="stage-arrow stage-arrow-left" type="button" onClick={() => move(-1)} aria-label="Layanan sebelumnya">‹</button>
++      <ul className="service-showcase" aria-live="polite">
++        {featuredServices.map((service, index) => {
++          let offset = (index - activeIndex + count) % count;
++          if (offset > count / 2) offset -= count;
++          const visible = Math.abs(offset) <= 2;
++          const position = offset === 0 ? "center" : offset < 0 ? `left-${Math.abs(offset)}` : `right-${offset}`;
++          return (
++            <li
++              className={`showcase-card showcase-${position}${offset === 0 ? " showcase-featured" : ""}${visible ? " is-visible" : " is-hidden"}`}
++              key={service.id}
++              aria-hidden={!visible}
++            >
++              <span className="showcase-number">{String(index + 1).padStart(2, "0")}</span>
++              <span className="showcase-icon"><ServiceIcon id={service.id} size={offset === 0 ? 68 : 58} /></span>
++              <h3>{service.title}</h3>
++              <p>{service.description}</p>
++              <a className="showcase-link" tabIndex={visible ? 0 : -1} href={`/api/sso/launch?app=${service.id}`}>
++                {service.name}<span className="sr-only"> (masuk otomatis)</span>
++              </a>
++            </li>
++          );
++        })}
++      </ul>
++      <button className="stage-arrow stage-arrow-right" type="button" onClick={() => move(1)} aria-label="Layanan berikutnya">›</button>
++      <div className="showcase-controls">
++        <span className="showcase-counter">{String(activeIndex + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}</span>
++        <div className="showcase-dots" aria-label="Pilih layanan">
++          {featuredServices.map((service, index) => (
++            <button key={service.id} type="button" className={index === activeIndex ? "is-active" : ""} onClick={() => setActiveIndex(index)} aria-label={`Tampilkan ${service.name}`} aria-current={index === activeIndex ? "true" : undefined} />
++          ))}
++        </div>
++      </div>
++    </div>
++  );
++}

@@ -51,7 +51,7 @@ def client(calls):
 @pytest.fixture
 def user():
     from app.tokens import derive_user
-    return {**derive_user("23106050059@student.uin-suka.ac.id", "Radinka Rafie"), "faculty": "SAINTEK", "department": "Informatika"}
+    return {**derive_user("23106050017@student.uin-suka.ac.id", "Ahmad Zamroni"), "faculty": "SAINTEK", "department": "Informatika"}
 
 
 @pytest.fixture

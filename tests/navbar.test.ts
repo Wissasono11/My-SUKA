@@ -14,7 +14,7 @@ test("navbar merender merek, nama layanan aktif, dan identitas pengguna", () => 
   const { root } = mount();
   assert.equal(root.querySelector(".brand")?.textContent, "MySuka");
   assert.equal(root.querySelector(".current")?.textContent, "SukaKetemu");
-  assert.match(root.querySelector(".user")!.textContent!, /Radinka Rafie/);
+  assert.match(root.querySelector(".user")!.textContent!, /Ahmad Zamroni/);
 });
 test("menu memuat 5 layanan lewat launcher SSO dan menandai aplikasi aktif", () => {
   const { root } = mount();

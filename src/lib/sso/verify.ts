@@ -3,7 +3,7 @@ import { jwtVerify, type JWTVerifyGetKey } from "jose";
 export type PrimaryRole = "MAHASISWA" | "DOSEN" | "STAF" | "ADMIN";
 export interface SsoUser {
   id: string; nim_nip: string; email: string; name: string;
-  primary_role: PrimaryRole; faculty: string; department: string;
+  primary_role: PrimaryRole; faculty: string; department: string; picture_url?: string;
 }
 
 export const AUDIENCE = "mysuka-microapps-ecosystem";
@@ -14,7 +14,9 @@ export async function verifySessionToken(token: string, keys: JWTVerifyGetKey, e
   try {
     const { payload } = await jwtVerify(token, keys, { issuer: expectedIssuer, audience: AUDIENCE, algorithms: ["RS256"], requiredClaims: ["exp", "iat", "sub", "jti"] });
     const user = payload.user as SsoUser | undefined;
-    return user && typeof user.id === "string" && typeof user.email === "string" ? user : null;
+    return user && typeof user.id === "string" && typeof user.email === "string"
+      ? { ...user, picture_url: typeof user.picture_url === "string" && user.picture_url.startsWith("https://") ? user.picture_url : undefined }
+      : null;
   } catch {
     return null;
   }

@@ -23,13 +23,13 @@ def test_produksi_tanpa_identity_secret_gagal_cepat(monkeypatch):
 
 
 def test_session_user_memuat_campus_id_internal_dan_id_buram():
-    cu = CampusUser(campus_id="U-77", email="a@student.uin-suka.ac.id", name="A", role="MAHASISWA", nim="23106050059")
+    cu = CampusUser(campus_id="U-77", email="a@student.uin-suka.ac.id", name="A", role="MAHASISWA", nim="23106050017")
     u = session_user(cu)
-    assert u["campus_id"] == "U-77" and u["id"].startswith("usr_") and u["nim_nip"] == "23106050059"
+    assert u["campus_id"] == "U-77" and u["id"].startswith("usr_") and u["nim_nip"] == "23106050017"
 
 
 def test_layanan_biasa_menerima_klaim_penuh_siska_minimal():
-    u = derive_user("23106050059@student.uin-suka.ac.id", "Radinka")
+    u = derive_user("23106050017@student.uin-suka.ac.id", "Ahmad Zamroni")
     full = claims_for_service(u, "sukaketemu")
     assert full["email"] == u["email"] and full["id"] == u["id"] and "campus_id" not in full
     minimal = claims_for_service(u, "siska")
