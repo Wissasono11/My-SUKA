@@ -8,3 +8,12 @@ public/assets/superapp-navbar.js
 portal-api/.venv/
 __pycache__/
 .pytest_cache/
+
+# Rahasia: kunci penandatangan SSO hanya lewat environment/secret manager, tidak pernah di repositori
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+public/assets/v/
+public/assets/superapp-navbar.manifest.json

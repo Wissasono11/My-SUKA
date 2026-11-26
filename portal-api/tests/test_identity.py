@@ -56,9 +56,12 @@ def test_token_serah_terima_siska_tidak_memuat_data_pribadi_dan_terikat_layanan(
     assert other["sub"] != payload["sub"]
 
 
-def test_launch_siska_via_api_memakai_id_khusus(client, session_cookie, user):
+def test_launch_siska_via_api_memakai_id_khusus(client, session_cookie, user, monkeypatch):
+    from tests.conftest import secret_of
     client.cookies.update(session_cookie)
     r = client.get("/api/sso/launch", params={"app": "siska"})
-    payload, _ = decode_unverified(r.headers["location"].split("token=")[1])
-    assert payload["svc"] == "siska" and set(payload["user"]) == {"id", "primary_role"}
+    code = r.headers["location"].split("code=")[1]
+    ex = client.post("/api/sso/exchange", json={"code": code, "client_id": "siska", "client_secret": secret_of("siska")})
+    payload, _ = decode_unverified(ex.json()["token"])
+    assert payload["svc"] == "siska" and payload["aud"] == "siska" and set(payload["user"]) == {"id", "primary_role"}
     assert payload["sub"] == opaque_id(user["campus_id"], scope="siska")

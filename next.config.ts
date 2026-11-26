@@ -46,6 +46,8 @@ const config: NextConfig = {
       { source: "/siska", headers: [{ key: "Cache-Control", value: "no-store" }, { key: "X-Frame-Options", value: "DENY" }, { key: "Referrer-Policy", value: "same-origin" }] },
       // Aset bersama untuk micro-app: cache pendek + SWR, boleh dimuat lintas origin bila diperlukan.
       { source: "/assets/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=300, stale-while-revalidate=86400" }] },
+      // Navbar berversi (isi tidak pernah berubah per URL) => aman dipakai dengan Subresource Integrity dan di-cache lama.
+      { source: "/assets/v/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
       { source: "/fonts/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
     ];
   },

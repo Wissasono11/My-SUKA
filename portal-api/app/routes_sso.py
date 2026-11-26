@@ -1,18 +1,22 @@
+import asyncio
 import json
 import logging
+import re
+from typing import Any
 
 import httpx
 import jwt
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import PlainTextResponse, RedirectResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
+from pydantic import BaseModel, Field
 
-from . import google
-from .config import Settings
-from .deps import http_client, settings_dep
-from .security import client_ip, is_same_origin, rate_limit, safe_return_to
-from .services import get_service
-from .tokens import derive_user, sign_token, verify_token
+from . import google, store
+from .config import Settings, backchannel_logout_url, client_secret, public_origin
+from .deps import current_user, http_client, settings_dep
+from .security import client_ip, is_same_origin, rate_limit, rate_limited, safe_return_to
+from .services import SERVICES, get_service
+from .tokens import decode_session, derive_user, sign_logout_token, sign_token
 
 log = logging.getLogger("mysuka.sso")
 router = APIRouter(prefix="/api/sso")
@@ -73,7 +77,7 @@ async def callback(
         saved_state, nonce, verifier, return_to = saved["state"], saved["nonce"], saved["verifier"], saved["returnTo"]
     except (ValueError, KeyError, TypeError):
         return fail("invalid")
-    if saved_state != state:
+    if not store.constant_time_equals(str(saved_state), state):
         return fail("state")
     try:
         id_token = await google.exchange_code(s, client, code, verifier)
@@ -87,35 +91,117 @@ async def callback(
     return resp
 
 
+_CHALLENGE = re.compile(r"^[A-Za-z0-9_-]{43}$")  # BASE64URL(SHA-256) tanpa padding
+
+
 @router.get("/launch")
-async def launch(app: str, request: Request, s: Settings = Depends(settings_dep)):
-    """Silent login (kontrak 2.3): 302 ke /{app}/sso-callback?token=JWT pendek (berisi jti)."""
+async def launch(
+    app: str, request: Request, code_challenge: str | None = None, code_challenge_method: str | None = None,
+    s: Settings = Depends(settings_dep),
+):
+    """Silent login. Default: Authorization Code (302 ke /{app}/sso-callback?code=<kode sekali pakai, 30 dtk>); backend
+    layanan menukarnya lewat POST /api/sso/exchange. JWT tidak pernah lewat URL. Mode lama (token di URL) hanya bila
+    SSO_LEGACY_TOKEN_HANDOFF=1."""
     service = get_service(app)
     if not service:
         return PlainTextResponse("Layanan tidak ditemukan", status_code=404)
     token = request.cookies.get(s.session_cookie)
-    user = verify_token(token) if token else None
-    if not user:
+    session = decode_session(token) if token else None
+    if not session:
         from urllib.parse import quote
         return _redirect(f"{s.base_url}/login?returnTo={quote(f'/api/sso/launch?app={service.id}', safe='')}")
+    user, sid = session["user"], session["sid"]
     ok, retry = rate_limit(f"launch:{user['id']}", 30, 60)
     if not ok:
         return PlainTextResponse("Terlalu banyak permintaan", status_code=429, headers={**NO_STORE, "Retry-After": str(retry)})
-    handoff = sign_token(user, s.handoff_ttl, service=service.id)
-    resp = RedirectResponse(f"{s.base_url}{service.href}/sso-callback?token={handoff}", status_code=302)
-    resp.headers.update({**NO_STORE, "Referrer-Policy": "no-referrer"})
-    return resp
+
+    base = public_origin(service.id) or s.base_url
+    headers = {**NO_STORE, "Referrer-Policy": "no-referrer"}
+    if s.legacy_token_handoff:
+        handoff = sign_token(user, s.handoff_ttl, service=service.id, sid=sid)
+        return RedirectResponse(f"{base}{service.href}/sso-callback?token={handoff}", status_code=302, headers=headers)
+
+    if not client_secret(service.id):  # fail closed: tanpa rahasia client, layanan tak dapat menukar kode dengan aman
+        log.error("launch ditolak: SSO_CLIENT_SECRET_%s belum dikonfigurasi", service.id.upper())
+        return PlainTextResponse("Layanan belum dikonfigurasi untuk SSO", status_code=503, headers=NO_STORE)
+    challenge = None
+    if code_challenge is not None:
+        if code_challenge_method != "S256" or not _CHALLENGE.match(code_challenge):
+            return PlainTextResponse("code_challenge tidak valid (wajib S256)", status_code=400, headers=NO_STORE)
+        challenge = code_challenge
+    code = store.issue_code({"user": user, "sid": sid, "service": service.id, "challenge": challenge}, s.code_ttl)
+    return RedirectResponse(f"{base}{service.href}/sso-callback?code={code}", status_code=302, headers=headers)
+
+
+class ExchangeRequest(BaseModel):
+    code: str = Field(min_length=20, max_length=200)
+    client_id: str = Field(min_length=1, max_length=40)
+    client_secret: str = Field(min_length=1, max_length=256)
+    code_verifier: str | None = Field(default=None, min_length=43, max_length=128)
+
+
+def _oauth_error(error: str, status: int) -> JSONResponse:
+    return JSONResponse({"error": error}, status_code=status, headers={**NO_STORE, "Pragma": "no-cache"})
+
+
+@router.post("/exchange")
+async def exchange(body: ExchangeRequest, request: Request, s: Settings = Depends(settings_dep)):
+    """Back-channel (server-ke-server): tukar kode sekali pakai dengan JWT serah-terima pendek (aud = layanan)."""
+    ip = client_ip(request)
+    if rate_limited(f"exchange-fail:{ip}", 10) or not rate_limit(f"exchange:{body.client_id}:{ip}", 120, 60)[0]:
+        return _oauth_error("rate_limited", 429)
+    service = get_service(body.client_id)
+    secret = client_secret(service.id) if service else None
+    if not service or not secret or not store.constant_time_equals(body.client_secret, secret):
+        rate_limit(f"exchange-fail:{ip}", 10, 60)  # hitung hanya kegagalan: batasi tebakan rahasia
+        return _oauth_error("invalid_client", 401)
+    entry = store.consume_code(body.code)  # sekali pakai: terhapus walau verifikasi di bawah gagal
+    if entry is None or entry["service"] != service.id:
+        return _oauth_error("invalid_grant", 400)
+    if entry["challenge"] is not None:
+        if not body.code_verifier or not store.constant_time_equals(google.pkce_challenge(body.code_verifier), entry["challenge"]):
+            return _oauth_error("invalid_grant", 400)
+    token = sign_token(entry["user"], s.handoff_ttl, service=service.id, sid=entry["sid"])
+    return JSONResponse(
+        {"token": token, "token_type": "Bearer", "expires_in": s.handoff_ttl},
+        headers={**NO_STORE, "Pragma": "no-cache"},
+    )
+
+
+@router.get("/session")
+async def session_status(_: dict[str, Any] = Depends(current_user)):
+    """Dipakai portal-web (internal) untuk memastikan sesi belum dicabut; verifikasi JWKS saja tidak mengetahuinya."""
+    return JSONResponse({"active": True}, headers=NO_STORE)
+
+
+async def _notify_backchannel(client: httpx.AsyncClient, user: dict[str, Any], sid: str) -> None:
+    async def one(service_id: str, url: str) -> None:
+        try:
+            await client.post(url, data={"logout_token": sign_logout_token(user, sid, service_id)}, timeout=2.0)
+        except httpx.HTTPError as exc:
+            log.warning("back-channel logout gagal: layanan=%s %s", service_id, type(exc).__name__)
+
+    await asyncio.gather(*(one(sv.id, backchannel_logout_url(sv.id)) for sv in SERVICES if backchannel_logout_url(sv.id)))
 
 
 @router.post("/logout")
-async def logout(request: Request, s: Settings = Depends(settings_dep)):
-    """Mengubah status: hanya POST + cek Origin (mencegah logout-CSRF)."""
+async def logout(
+    request: Request, background: BackgroundTasks, s: Settings = Depends(settings_dep),
+    client: httpx.AsyncClient = Depends(http_client),
+):
+    """Mengubah status: hanya POST + cek Origin (mencegah logout-CSRF). Sesi dicabut di SERVER (bukan hanya cookie
+    dihapus) dan layanan diberi tahu lewat back-channel logout."""
     if not is_same_origin(request, s.base_url, s.allowed_origins, allow_loopback=not s.production):
         log.warning("logout ditolak: origin=%s diharapkan=%s", request.headers.get("origin"), s.base_url)
         return PlainTextResponse(
             "Forbidden: Origin tidak cocok dengan APP_BASE_URL. Buka portal lewat alamat yang sama dengan APP_BASE_URL.",
             status_code=403, headers=NO_STORE,
         )
+    token = request.cookies.get(s.session_cookie)
+    session = decode_session(token) if token else None
+    if session:
+        store.revoke_session(session["sid"], float(session["exp"]))
+        background.add_task(_notify_backchannel, client, session["user"], session["sid"])
     resp = _redirect(f"{s.base_url}/login", 303)
     resp.delete_cookie(s.session_cookie, path="/", secure=s.production, httponly=True, samesite="lax")
     return resp

@@ -15,6 +15,7 @@ services:
     read_only: true
     tmpfs: ["/tmp"]
     security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
 
   portal-web:
     build:
@@ -32,6 +33,7 @@ services:
     read_only: true
     tmpfs: ["/tmp", "/app/.next/cache"]
     security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
 
   caddy:
     image: caddy:2

@@ -22,8 +22,15 @@ def test_rate_limit_kunci_terpisah():
 
 
 def test_client_ip():
-    assert client_ip(req({"x-forwarded-for": "1.2.3.4, 10.0.0.1"})) == "1.2.3.4"
+    # entri kiri bisa dipalsukan klien; yang dipercaya adalah entri terakhir (ditulis proxy tepercaya)
+    assert client_ip(req({"x-forwarded-for": "6.6.6.6, 10.0.0.1"})) == "10.0.0.1"
+    assert client_ip(req({"x-forwarded-for": "1.2.3.4"})) == "1.2.3.4"
     assert client_ip(req({})) == "5.5.5.5"
+
+
+def test_client_ip_trust_proxy_mati_memakai_peer(monkeypatch):
+    monkeypatch.setenv("TRUST_PROXY", "0")
+    assert client_ip(req({"x-forwarded-for": "1.2.3.4"})) == "5.5.5.5"
 
 
 def test_csrf_origin():

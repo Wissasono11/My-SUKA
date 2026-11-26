@@ -1,4 +1,5 @@
 """Rate limit, CSRF, dan validasi returnTo."""
+import os
 import re
 import time
 from urllib.parse import urlparse
@@ -25,6 +26,13 @@ def rate_limit(key: str, limit: int, window_s: float, now: float | None = None) 
     return False, max(1, int(reset - now + 0.999))
 
 
+def rate_limited(key: str, limit: int, now: float | None = None) -> bool:
+    """Memeriksa tanpa menambah hitungan: True bila `key` sudah melewati `limit` dalam jendela berjalan."""
+    now = time.monotonic() if now is None else now
+    entry = _buckets.get(key)
+    return entry is not None and entry[1] > now and entry[0] >= limit
+
+
 def _prune(now: float) -> None:
     for k in [k for k, (_, r) in _buckets.items() if r <= now]:
         del _buckets[k]
@@ -39,9 +47,13 @@ def reset_rate_limits() -> None:
 
 
 def client_ip(request: Request) -> str:
-    """Hanya dapat dipercaya bila di belakang proxy tepercaya (Caddy/Nginx) yang menimpa X-Forwarded-For."""
-    xff = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
-    return xff or request.headers.get("x-real-ip") or (request.client.host if request.client else "unknown")
+    """IP klien untuk rate limit. Di belakang proxy tepercaya (Caddy menimpa X-Forwarded-For dengan satu nilai) yang
+    dipakai adalah entri TERAKHIR: entri di kiri dapat dipalsukan klien. TRUST_PROXY=0 => abaikan header (tanpa proxy)."""
+    peer = request.client.host if request.client else "unknown"
+    if os.environ.get("TRUST_PROXY", "1") == "0":
+        return peer
+    xff = [p.strip() for p in request.headers.get("x-forwarded-for", "").split(",") if p.strip()]
+    return xff[-1] if xff else (request.headers.get("x-real-ip") or peer)
 
 
 _LOOPBACK = {"localhost", "127.0.0.1", "[::1]", "::1"}

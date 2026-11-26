@@ -12,6 +12,8 @@ Alasan: satu origin dengan path berbeda (`/siska`, `/archive`, …) tidak menjad
 - Usulan: tiap layanan menjadi OIDC client dari IdP (portal sekarang, Keycloak nanti). Layanan melakukan redirect Authorization Code + PKCE, menukar kode di backend, lalu membuat sesi sendiri. Pengguna tidak melihat form login karena sesi IdP masih aktif.
 - Sampai itu siap, handoff token tetap dipakai dengan syarat: TTL ≤ 120 dtk, redirect 303 segera (atau `history.replaceState`), dan penolakan token yang sudah dipakai (`jti` sudah ada di token portal-api).
 
+> **Status implementasi:** poin 1 (origin SISKA terpisah via Caddy + `SISKA_PUBLIC_ORIGIN`), poin 2 (authorization code + `POST /api/sso/exchange`, PKCE opsional) dan poin 4 sudah diimplementasikan di portal; lihat `docs/KEAMANAN.md`. Mode lama (`?token=`) hanya aktif dengan `SSO_LEGACY_TOKEN_HANDOFF=1`.
+
 ## 3. Verifikasi token lewat konfigurasi, bukan nilai tertanam
 Setiap layanan membaca dua variabel lingkungan:
 ```

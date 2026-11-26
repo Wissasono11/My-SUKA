@@ -48,6 +48,7 @@ def verify_id_token(s: Settings, id_token: str, nonce: str) -> dict:
     claims = jwt.decode(
         id_token, key, algorithms=["RS256"], audience=s.google_client_id,
         issuer=["https://accounts.google.com", "accounts.google.com"],
+        options={"require": ["exp", "iat", "iss", "aud", "sub", "email"]},
     )
     if claims.get("nonce") != nonce:
         raise LoginDenied("nonce tidak cocok")

@@ -4,19 +4,22 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from app import keys, security, widgets
+from app import keys, security, store, widgets
 from app.deps import http_client
 from app.main import app
 
 
 @pytest.fixture(autouse=True)
 def env(monkeypatch):
-    for k in ("ENV", "SSO_PRIVATE_KEY_PEM", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "ADMIN_EMAILS", "IDENTITY_HMAC_SECRET", "PRIVACY_SERVICES", "SESSION_COOKIE_NAME"):
+    for k in ("ENV", "SSO_PRIVATE_KEY_PEM", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "ADMIN_EMAILS", "IDENTITY_HMAC_SECRET", "PRIVACY_SERVICES", "SESSION_COOKIE_NAME", "SSO_LEGACY_TOKEN_HANDOFF", "TRUST_PROXY", "SSO_RETIRED_JWKS", "SISKA_PUBLIC_ORIGIN", "SUKAKETEMU_BACKCHANNEL_LOGOUT_URL", "SISKA_BACKCHANNEL_LOGOUT_URL"):
         monkeypatch.delenv(k, raising=False)
     monkeypatch.setenv("APP_BASE_URL", "https://mysuka.test")
     monkeypatch.setenv("SUKAKETEMU_ORIGIN", "https://sukaketemu.upstream")
     monkeypatch.setenv("SISKA_ORIGIN", "https://siska.upstream")
+    for sid in ("sukaketemu", "campusfix", "siska", "archive", "paas", "terassc"):
+        monkeypatch.setenv(f"SSO_CLIENT_SECRET_{sid.upper()}", f"secret-{sid}-".ljust(40, "x"))
     keys._load.cache_clear()
+    store.reset()
     security.reset_rate_limits()
     widgets.reset_widget_cache()
     yield
@@ -52,6 +55,10 @@ def client(calls):
 def user():
     from app.tokens import derive_user
     return {**derive_user("23106050017@student.uin-suka.ac.id", "Ahmad Zamroni"), "faculty": "SAINTEK", "department": "Informatika"}
+
+
+def secret_of(service_id: str) -> str:
+    return f"secret-{service_id}-".ljust(40, "x")
 
 
 @pytest.fixture

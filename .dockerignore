@@ -5,3 +5,8 @@ portal-api/.venv
 portal-api/.pytest_cache
 .env*
 !.env.example
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.jks

@@ -78,9 +78,10 @@ tests/                 Pengujian Node/TypeScript untuk cookie, navbar, token dan
 ### Navigasi ke layanan
 
 1. Dashboard membuka `/api/sso/launch?app=<service>`.
-2. API memvalidasi cookie sesi dan membentuk JWT serah-terima berttl pendek (120 detik).
-3. Pengguna diarahkan ke `/<service>/sso-callback?token=<jwt>`.
-4. Micro-app memvalidasi signature, issuer, audience, `exp`, `jti` dan `svc`, lalu membuat sesi sendiri.
+2. API memvalidasi cookie sesi (tanda tangan, `typ`, belum dicabut) dan menerbitkan **kode otorisasi sekali pakai** (30 detik).
+3. Pengguna diarahkan ke `/<service>/sso-callback?code=<kode>`; JWT tidak pernah berada di URL.
+4. Backend micro-app menukar kode lewat `POST /api/sso/exchange` (`client_id` + `client_secret`, opsional PKCE) dan menerima JWT 60 detik ber-`aud` = id layanan, lalu memvalidasi signature, `iss`, `aud`, `exp`, `jti`, `svc` dan membuat sesi sendiri.
+   Detail kontrak dan status temuan keamanan: [`docs/KEAMANAN.md`](docs/KEAMANAN.md).
 5. Portal menyingkirkan cookie portal sebelum meneruskan trafik layanan; SISKA menerima isolasi tambahan.
 
 ### Dashboard widget

@@ -1,4 +1,5 @@
-# Edge di VPS: TLS otomatis, routing, dan isolasi cookie. Belum diuji di sini (tidak ada Caddy); uji dengan `caddy validate`.
+# Edge di VPS: TLS otomatis, routing, isolasi cookie/origin, dan log tanpa data sensitif.
+# Validasi: `caddy validate --config infra/Caddyfile --adapter caddyfile` (env di .env.production harus terisi).
 {
 	email {$ACME_EMAIL}
 }
@@ -18,33 +19,84 @@
 	}
 }
 
-{$SITE_ADDRESS} {
+# Header untuk semua origin yang dilayani edge.
+(hardening) {
 	encode zstd gzip
-
 	header {
 		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
 		X-Content-Type-Options "nosniff"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 		-Server
 	}
+}
 
-	# portal-api: SSO, widget, JWKS
-	@api path /api/* /.well-known/jwks.json /healthz
-	handle @api {
-		reverse_proxy portal-api:8000 {
-			header_up X-Forwarded-For {remote_host}
-		}
+# ---------------------------------------------------------------------------------------------
+# SISKA pada ORIGIN TERPISAH (Same-Origin Policy sebagai batas keamanan; lihat docs/KEAMANAN.md).
+# DNS: SISKA_PUBLIC_HOST (mis. siska.mysuka.portal.ac.id) harus mengarah ke VPS ini.
+# Sengaja TIDAK ada direktif `log`: akses ke layanan pengaduan tidak dicatat (tanpa IP, path, maupun waktu).
+# Cookie sesi SISKA host-only (tanpa atribut Domain) sehingga tidak pernah terkirim ke portal/layanan lain.
+# ---------------------------------------------------------------------------------------------
+{$SISKA_PUBLIC_HOST} {
+	import hardening
+	header {
+		Cache-Control "no-store"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+		Cross-Origin-Opener-Policy "same-origin"
+		Content-Security-Policy "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
 	}
 
-	# SISKA: tanpa cache, tidak boleh di-iframe (header diset Caddy sehingga pasti ikut pada respons proxy)
+	redir / /siska 308
+
 	handle /siska* {
 		reverse_proxy {$SISKA_ORIGIN} {
 			header_up Host {upstream_hostport}
 			header_up X-Forwarded-For {remote_host}
 			header_up Cookie "(?:^|;\s*)(?:__Host-)?mysuka_(?:session|oidc)=[^;]*" ""
-			header_down Cache-Control "no-store"
-			header_down X-Frame-Options "DENY"
-			header_down Referrer-Policy "same-origin"
 			header_down -Server
+		}
+	}
+
+	handle {
+		respond "Not Found" 404
+	}
+}
+
+{$SITE_ADDRESS} {
+	import hardening
+
+	# Access log: tanpa cookie/Authorization, query string (code/token/state) disamarkan, IP dipotong ke /24 (IPv6 /56).
+	log {
+		output stdout
+		format filter {
+			wrap json
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+			resp_headers>Set-Cookie delete
+			request>uri query {
+				replace code REDACTED
+				replace token REDACTED
+				replace state REDACTED
+				replace logout_token REDACTED
+			}
+			request>remote_ip ip_mask 24 56
+			request>client_ip ip_mask 24 56
+		}
+	}
+
+	# /siska di domain utama hanya pengalih ke origin SISKA yang terpisah (tidak dicatat, tidak diproksi).
+	@siska_legacy path /siska /siska/*
+	log_skip @siska_legacy
+	redir @siska_legacy https://{$SISKA_PUBLIC_HOST}{uri} 308
+
+	# portal-api: SSO, widget, JWKS
+	@api path /api/* /.well-known/jwks.json /healthz
+	handle @api {
+		request_body {
+			max_size 64KB
+		}
+		reverse_proxy portal-api:8000 {
+			header_up X-Forwarded-For {remote_host}
 		}
 	}
 

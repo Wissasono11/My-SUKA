@@ -53,8 +53,21 @@ def session_user(cu: CampusUser) -> dict[str, Any]:
     }
 
 
-def claims_for_service(user: dict[str, Any], service_id: str) -> dict[str, Any]:
-    """Klaim yang dikirim ke layanan tertentu. Layanan sensitif mendapat id sendiri dan klaim minimal."""
+def claims_for_service(user: dict[str, Any], service_id: str, purpose: str = "handoff") -> dict[str, Any]:
+    """Klaim yang dikirim ke layanan tertentu (minimisasi data).
+
+    - Layanan sensitif (PRIVACY_SERVICES, default SISKA): id sendiri + peran saja, tanpa email/nama/NIM.
+    - purpose="widget": hanya id dan peran; ringkasan beranda tidak butuh email/nama/NIM.
+    - Lainnya (handoff): profil lengkap untuk pembuatan profil just-in-time.
+    """
     if service_id in get_settings().privacy_services:
         return {"id": opaque_id(user["campus_id"], scope=service_id), "primary_role": user["primary_role"]}
+    if purpose == "widget":
+        return {"id": user["id"], "primary_role": user["primary_role"]}
     return {k: user[k] for k in ("id", "nim_nip", "email", "name", "primary_role", "faculty", "department")}
+
+
+def service_sid(sid: str, service_id: str) -> str:
+    """sid per layanan: layanan sensitif tidak boleh dapat dikorelasikan dengan layanan lain lewat sid yang sama."""
+    digest = hmac.new(identity_secret(), f"v1:sid:{service_id}:{sid}".encode(), hashlib.sha256).hexdigest()
+    return f"sid_{digest[:32]}"

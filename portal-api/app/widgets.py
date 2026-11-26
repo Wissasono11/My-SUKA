@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 
 from .config import get_settings
 from .services import SERVICES, Service
-from .tokens import sign_token
+from .tokens import TYP_WIDGET, sign_token
 
 WIDGET_TIMEOUT_S = 1.5  # kontrak 4.3
 CACHE_TTL_S = 45.0
@@ -77,7 +77,7 @@ async def fetch_widget_cached(service: Service, user_id: str, token: str, client
 async def gather_widgets(user: dict[str, Any], client: httpx.AsyncClient) -> list[dict[str, Any]]:
     ttl = get_settings().handoff_ttl
     results = await asyncio.gather(
-        *(fetch_widget_cached(s, user["id"], sign_token(user, ttl, service=s.id), client) for s in SERVICES if s.widget),
+        *(fetch_widget_cached(s, user["id"], sign_token(user, ttl, service=s.id, purpose=TYP_WIDGET), client) for s in SERVICES if s.widget),
         return_exceptions=True,
     )
     return [r for r in results if isinstance(r, dict)]

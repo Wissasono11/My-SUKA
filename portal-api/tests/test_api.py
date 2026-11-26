@@ -62,14 +62,37 @@ def test_launch_layanan_tak_dikenal_404(client, session_cookie):
     assert client.get("/api/sso/launch", params={"app": "nope"}).status_code == 404
 
 
-def test_launch_silent_login_token_pendek_dengan_jti(client, session_cookie):
+def test_launch_mengirim_kode_sekali_pakai_bukan_jwt(client, session_cookie):
     client.cookies.update(session_cookie)
     r = client.get("/api/sso/launch", params={"app": "sukaketemu"})
     assert r.status_code == 302 and r.headers["referrer-policy"] == "no-referrer" and r.headers["cache-control"] == "no-store"
     loc = r.headers["location"]
+    assert loc.startswith("https://mysuka.test/sukaketemu/sso-callback?code=") and "token=" not in loc
+    assert "eyJ" not in loc, "JWT tidak boleh ada di URL"
+
+
+def test_launch_legacy_token_hanya_bila_diaktifkan(client, session_cookie, monkeypatch):
+    monkeypatch.setenv("SSO_LEGACY_TOKEN_HANDOFF", "1")
+    client.cookies.update(session_cookie)
+    r = client.get("/api/sso/launch", params={"app": "sukaketemu"})
+    loc = r.headers["location"]
     assert loc.startswith("https://mysuka.test/sukaketemu/sso-callback?token=")
     payload, _ = decode_unverified(loc.split("token=")[1])
-    assert payload["exp"] - payload["iat"] == 120 and len(payload["jti"]) == 32
+    assert payload["exp"] - payload["iat"] == 60 and len(payload["jti"]) == 32
+    assert payload["aud"] == "sukaketemu" and payload["typ"] == "handoff"
+
+
+def test_launch_tanpa_rahasia_client_ditolak_fail_closed(client, session_cookie, monkeypatch):
+    monkeypatch.delenv("SSO_CLIENT_SECRET_SUKAKETEMU")
+    client.cookies.update(session_cookie)
+    assert client.get("/api/sso/launch", params={"app": "sukaketemu"}).status_code == 503
+
+
+def test_launch_memakai_origin_publik_terpisah(client, session_cookie, monkeypatch):
+    monkeypatch.setenv("SISKA_PUBLIC_ORIGIN", "https://siska.mysuka.test")
+    client.cookies.update(session_cookie)
+    loc = client.get("/api/sso/launch", params={"app": "siska"}).headers["location"]
+    assert loc.startswith("https://siska.mysuka.test/siska/sso-callback?code=")
 
 
 def test_launch_dibatasi_30_per_menit_per_pengguna(client, session_cookie):
@@ -125,4 +148,4 @@ def test_launch_terassc_berhasil(client, session_cookie):
     client.cookies.update(session_cookie)
     r = client.get("/api/sso/launch", params={"app": "terassc"})
     assert r.status_code == 302
-    assert r.headers["location"].startswith("https://mysuka.test/terassc/sso-callback?token=")
+    assert r.headers["location"].startswith("https://mysuka.test/terassc/sso-callback?code=")

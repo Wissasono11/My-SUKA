@@ -1,4 +1,5 @@
 """Kunci penandatangan RS256. Produksi wajib memakai PEM dari environment; dev memakai kunci sementara."""
+import json
 import logging
 from functools import lru_cache
 
@@ -35,3 +36,30 @@ def _load(pem: str | None, production: bool, kid: str):
 def load_keys():
     s = get_settings()
     return _load(s.private_pem, s.production, s.key_id)
+
+
+_PRIVATE_MEMBERS = {"d", "p", "q", "dp", "dq", "qi", "oth"}
+
+
+def load_jwks() -> dict:
+    """JWKS publik: kunci aktif + kunci lama (SSO_RETIRED_JWKS, JSON array JWK publik) selama masa tumpang-tindih rotasi,
+    supaya layanan yang menyimpan JWKS di cache tetap dapat memverifikasi token yang baru ditandatangani kunci lama."""
+    import os
+
+    _, jwk = load_keys()
+    keys = [jwk]
+    raw = (os.environ.get("SSO_RETIRED_JWKS") or "").strip()
+    if raw:
+        try:
+            retired = json.loads(raw)
+            if not isinstance(retired, list):
+                raise ValueError("harus array")
+            for k in retired:
+                if not isinstance(k, dict) or k.get("kty") != "RSA" or not k.get("kid") or k["kid"] == jwk["kid"]:
+                    raise ValueError("JWK tidak valid atau kid sama dengan kunci aktif")
+                if _PRIVATE_MEMBERS & k.keys():
+                    raise ValueError("JWK memuat komponen kunci PRIVAT")
+                keys.append({**k, "alg": ALG, "use": "sig"})
+        except (ValueError, TypeError) as exc:
+            raise RuntimeError(f"SSO_RETIRED_JWKS tidak valid: {exc}") from exc
+    return {"keys": keys}

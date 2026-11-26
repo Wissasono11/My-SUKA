@@ -2,7 +2,7 @@ import jwt
 import pytest
 
 from app.keys import load_keys
-from app.tokens import AUDIENCE, derive_user, sign_token, verify_token
+from app.tokens import SESSION_AUDIENCE, derive_user, sign_token, verify_token
 from tests.conftest import decode_unverified
 
 
@@ -10,11 +10,11 @@ def test_token_rs256_sesuai_kontrak_dan_terverifikasi_jwks(user):
     token = sign_token(user, 60)
     payload, header = decode_unverified(token)
     assert header["alg"] == "RS256" and header["typ"] == "JWT" and header["kid"] == "mysuka-superapp-key-2026-v1"
-    assert payload["aud"] == AUDIENCE and payload["sub"] == user["id"] and payload["sub"].startswith("usr_")
+    assert payload["aud"] == SESSION_AUDIENCE and payload["sub"] == user["id"] and payload["sub"].startswith("usr_")
     assert "23106050059" not in payload["sub"], "sub tidak boleh membocorkan NIM/email"
     _, jwk = load_keys()
     assert "d" not in jwk, "JWKS tidak boleh memuat kunci privat"
-    jwt.decode(token, jwt.PyJWK(jwk).key, algorithms=["RS256"], audience=AUDIENCE, issuer="https://mysuka.test")
+    jwt.decode(token, jwt.PyJWK(jwk).key, algorithms=["RS256"], audience=SESSION_AUDIENCE, issuer="https://mysuka.test")
 
 
 def test_jti_unik_untuk_setiap_token(user):
@@ -34,7 +34,7 @@ def test_token_tanpa_jti_ditolak(user):
     from app.keys import load_keys as lk
     private, _ = lk()
     import time
-    bad = jwt.encode({"iss": "https://mysuka.test", "sub": "x", "aud": AUDIENCE, "iat": int(time.time()), "exp": int(time.time()) + 60, "user": user}, private, algorithm="RS256")
+    bad = jwt.encode({"iss": "https://mysuka.test", "sub": "x", "aud": SESSION_AUDIENCE, "typ": "session", "sid": "s", "iat": int(time.time()), "exp": int(time.time()) + 60, "user": user}, private, algorithm="RS256")
     assert verify_token(bad) is None
 
 
