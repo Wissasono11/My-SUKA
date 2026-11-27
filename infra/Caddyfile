@@ -13,8 +13,11 @@
 		reverse_proxy {args[0]} {
 			header_up Host {upstream_hostport}
 			header_up X-Forwarded-For {remote_host}
+			header_up -X-Real-IP
+			header_up -Forwarded
 			header_up Cookie "(?:^|;\s*)(?:__Host-)?mysuka_(?:session|oidc)=[^;]*" ""
 			header_down -Server
+			header_down -X-Powered-By
 		}
 	}
 }
@@ -52,8 +55,11 @@
 		reverse_proxy {$SISKA_ORIGIN} {
 			header_up Host {upstream_hostport}
 			header_up X-Forwarded-For {remote_host}
+			header_up -X-Real-IP
+			header_up -Forwarded
 			header_up Cookie "(?:^|;\s*)(?:__Host-)?mysuka_(?:session|oidc)=[^;]*" ""
 			header_down -Server
+			header_down -X-Powered-By
 		}
 	}
 
@@ -89,14 +95,32 @@
 	log_skip @siska_legacy
 	redir @siska_legacy https://{$SISKA_PUBLIC_HOST}{uri} 308
 
-	# portal-api: SSO, widget, JWKS
-	@api path /api/* /.well-known/jwks.json /healthz
+	# Pemindaian rutin: berkas rahasia/VCS tidak pernah dilayani siapa pun di balik edge ini.
+	@probe path_regexp probe ^/\.(env|git|svn|hg|ht|DS_Store)
+	handle @probe {
+		respond "Not Found" 404
+	}
+
+	# Dokumentasi API tidak pernah dipublikasikan di internet (portal-api juga mematikannya saat ENV=production).
+	@apidocs path /api/docs* /api/redoc* /api/openapi.json
+	handle @apidocs {
+		respond "Not Found" 404
+	}
+
+	# portal-api: SSO, widget, JWKS. /healthz hanya untuk healthcheck internal (compose), bukan untuk internet.
+	@healthz path /healthz
+	handle @healthz {
+		respond "Not Found" 404
+	}
+	@api path /api/* /.well-known/jwks.json
 	handle @api {
 		request_body {
 			max_size 64KB
 		}
 		reverse_proxy portal-api:8000 {
 			header_up X-Forwarded-For {remote_host}
+			header_up -X-Real-IP
+			header_up -Forwarded
 		}
 	}
 

@@ -199,7 +199,7 @@ body{font-size:16px}
 .showcase-controls{position:absolute;left:50%;bottom:1px;z-index:12;display:flex;align-items:center;gap:14px;transform:translateX(-50%)}
 .showcase-counter{font-size:11px;font-weight:800;letter-spacing:.08em;color:#47765b;font-variant-numeric:tabular-nums}
 .showcase-dots{display:flex;align-items:center;gap:6px}
-.showcase-dots button{position:relative;width:9px;height:9px;border:1px solid transparent;background:#bfd3c5}
+.showcase-dots button{position:relative;appearance:none;width:9px;height:9px;padding:0;border:1px solid transparent;border-radius:999px;background:#bfd3c5;cursor:pointer;flex:none}
 .showcase-dots button::before{content:"";position:absolute;inset:-7px}
 .showcase-dots button.is-active{width:28px;background:#176d45}
 .connected-section{min-height:470px}
@@ -280,7 +280,7 @@ body{font-size:16px}
 .showcase-featured{box-shadow:0 16px 34px rgba(8,63,39,.24)!important}
 .showcase-featured::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.13),transparent 42%);pointer-events:none}
 .stage-arrow:active{transform:scale(.94)}
-.showcase-dots button{position:relative;width:9px;height:9px;border:1px solid transparent;background:#bfd3c5}
+.showcase-dots button{position:relative;appearance:none;width:9px;height:9px;padding:0;border:1px solid transparent;border-radius:999px;background:#bfd3c5;cursor:pointer;flex:none}
 .showcase-dots button::before{content:"";position:absolute;inset:-7px}
 .showcase-dots button.is-active{width:28px;background:#176d45}
 

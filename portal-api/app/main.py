@@ -11,6 +11,7 @@ from .deps import current_user, http_client
 from .identity import identity_secret
 from .keys import load_jwks, load_keys
 from .logging_utils import install as install_log_redaction
+from . import store
 from .routes_sso import router as sso_router
 from .services import SERVICES
 from .widgets import gather_widgets
@@ -21,6 +22,7 @@ async def lifespan(app: FastAPI):
     load_keys()  # gagal cepat bila kunci produksi tidak valid
     identity_secret()  # gagal cepat bila IDENTITY_HMAC_SECRET kosong di produksi
     load_jwks()  # gagal cepat bila SSO_RETIRED_JWKS salah/memuat kunci privat
+    store.ping()  # gagal cepat bila REDIS_URL diisi tetapi tidak terjangkau (jangan jalan setengah-aman)
     for warning in validate_startup(get_settings(), [sv.id for sv in SERVICES]):
         logging.getLogger("mysuka.config").warning(warning)
     app.state.http = httpx.AsyncClient(
@@ -46,6 +48,13 @@ async def security_headers(request, call_next):
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("Referrer-Policy", "no-referrer")
     resp.headers.setdefault("Cross-Origin-Resource-Policy", "same-site")
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    # API tidak menyajikan HTML/skrip: kebijakan paling ketat. (Dokumentasi /api/docs hanya ada di dev dan butuh CDN.)
+    if not request.url.path.startswith("/api/docs"):
+        resp.headers.setdefault("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'")
+    if get_settings().production:
+        resp.headers.setdefault("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
     if request.url.path.startswith("/api/"):
         resp.headers.setdefault("Cache-Control", "no-store")
     return resp

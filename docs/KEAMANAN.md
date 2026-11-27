@@ -54,3 +54,26 @@ Panduan sisi layanan: `docs/ADOPSI-MICROAPP.md` bagian 4.
 - Cookie sesi lama tidak valid (`aud`/`typ`/`sid` baru): semua pengguna login ulang sekali setelah deploy.
 - Tanpa `SSO_CLIENT_SECRET_<ID>`, `/launch` ke layanan itu menjawab 503 (fail closed).
 - `/siska` di domain utama kini mengalihkan ke `SISKA_PUBLIC_HOST`; SISKA harus tetap melayani di path `/siska` (basePath-nya sudah begitu).
+
+## Pengerasan lanjutan (patch `mysuka-security-hardening`)
+
+| Area | Perubahan | Berkas |
+|---|---|---|
+| ENV aman-bawaan | `ENV` kosong/salah eja = **production** (sebelumnya development: login dev, kunci sementara, cookie tanpa Secure). Next dan FastAPI memakai aturan yang sama | `config.py`, `cookie.ts` |
+| Sesi | Model **allowlist**: sesi sah hanya bila terdaftar; ada batas **idle** (`SESSION_IDLE_SECONDS`, 30 mnt) dan batas mutlak; restart tidak menghidupkan sesi yang dicabut; logout mengirim `Clear-Site-Data` | `store.py`, `tokens.py` |
+| Redis | Sesi, kode sekali pakai (`GETDEL` atomik) dan rate limit global; gagal tertutup bila Redis mati; compose menambah Redis tanpa persistensi disk | `store.py`, `security.py`, `docker-compose.yml` |
+| Cookie OIDC | Produksi: `__Host-mysuka_oidc` (anti cookie tossing dari subdomain) | `routes_sso.py` |
+| Exchange | Rotasi rahasia tanpa downtime (`_NEXT`), kode ditolak bila sesi sudah berakhir, PKCE terkelola (`SSO_PKCE_SERVICES`, `/sso-start`) | `routes_sso.py`, `config.py` |
+| Masukan IdP | Nama dibersihkan (kontrol/bidi, 120 karakter); foto hanya dari `*.googleusercontent.com` | `tokens.py` |
+| Widget (layanan tak tepercaya) | Respons maks. 32 KB, panjang/jumlah field dibatasi, `action_url` harus path di dalam layanan itu | `widgets.py` |
+| Audit | Log JSON tanpa data pribadi (`mysuka.audit`), IP dipotong; dasar alert | `audit.py` |
+| Header API | CSP `default-src 'none'`, X-Frame-Options, HSTS (produksi), Permissions-Policy | `main.py` |
+| Edge | `/healthz`, `/api/docs`, `/.env`, `/.git` tidak pernah keluar; X-Real-IP/Forwarded dibuang ke upstream (divalidasi `caddy validate` 2.10) | `Caddyfile` |
+| Rantai pasok | `check-secrets` mendeteksi kunci Google/AWS/GitHub/Slack/service account dan `.env` terlacak Git; CI: npm audit, pip-audit, gitleaks, Trivy; Dependabot; `npm ci --ignore-scripts` | `.github/`, `scripts/` |
+| Layanan | **microapp-kit**: verifier (Python/Node), contoh layanan, dan pemeriksa black-box | `microapp-kit/`, `docs/KEAMANAN-MICROAPP.md` |
+
+### Masih terbuka (jujur)
+- **CSP tanpa `'unsafe-inline'`** untuk skrip: butuh nonce per request, memaksa render dinamis pada halaman publik. Tidak dikerjakan karena tidak dapat diverifikasi tanpa browser di lingkungan ini.
+- **Rate limit di edge** (mis. plugin `caddy-ratelimit`): perlu build Caddy kustom; belum diuji. Rate limit aplikasi (Redis) sudah ada.
+- **Layar consent/retensi (UU PDP)**, **kode layanan lain** (SISKA, PaaS, dll.), **konfigurasi Google Cloud, VPS, firewall**: di luar repo ini. CI dan Docker image belum dijalankan di sini (hanya YAML yang divalidasi).
+- `campus_id` masih berupa email; pindah ke `sub` Google/ID kampus permanen akan mengubah semua id pengguna, jadi perlu keputusan migrasi.

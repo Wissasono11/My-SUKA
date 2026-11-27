@@ -16,11 +16,12 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
     "lhci": "lhci autorun",
-    "quality": "npm run secrets:check && npm run assets:check && npm run typecheck && npm run test && npm run api:test && npm run build",
+    "quality": "npm run secrets:check && npm run assets:check && npm run typecheck && npm run test && npm run api:test && npm run kit:test && npm run build",
     "api:install": "python3 -m venv portal-api/.venv && portal-api/.venv/bin/pip install -r portal-api/requirements-dev.txt",
     "api:dev": "cd portal-api && .venv/bin/uvicorn app.main:app --reload --port 8000 --env-file ../.env.local",
     "api:test": "cd portal-api && .venv/bin/python -m pytest -q",
-    "secrets:check": "node scripts/check-secrets.mjs"
+    "secrets:check": "node scripts/check-secrets.mjs",
+    "kit:test": "node --test microapp-kit/node/test/*.test.mjs microapp-kit/conformance/test/*.test.mjs"
   },
   "dependencies": {
     "jose": "^6.0.0",

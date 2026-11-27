@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ServiceIcon from "@/components/ServiceIcon";
 import { SERVICES } from "@/lib/services";
 
@@ -11,6 +11,13 @@ export default function ServiceShowcase() {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const pointerStartX = useRef<number | null>(null);
   const count = featuredServices.length;
+
+  useEffect(() => {
+    setActiveIndex((current) => {
+      if (count === 0) return 0;
+      return ((current % count) + count) % count;
+    });
+  }, [count]);
 
   const move = (direction: -1 | 1) => {
     setActiveIndex((current) => (current + direction + count) % count);
@@ -28,6 +35,8 @@ export default function ServiceShowcase() {
       aria-label="Layanan digital MySuka"
       role="region"
       aria-roledescription="carousel"
+      data-active-index={activeIndex}
+      data-active-service={activeService?.id}
       tabIndex={0}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") {
@@ -45,10 +54,20 @@ export default function ServiceShowcase() {
         }
       }}
       onPointerDown={(event) => {
+        const target = event.target as HTMLElement;
+        if (target.closest("button, a")) {
+          pointerStartX.current = null;
+          return;
+        }
         pointerStartX.current = event.clientX;
       }}
       onPointerUp={(event) => {
         if (pointerStartX.current === null) return;
+        const target = event.target as HTMLElement;
+        if (target.closest("button, a")) {
+          pointerStartX.current = null;
+          return;
+        }
         const distance = event.clientX - pointerStartX.current;
         pointerStartX.current = null;
         if (Math.abs(distance) >= 45) move(distance > 0 ? -1 : 1);
@@ -73,6 +92,7 @@ export default function ServiceShowcase() {
               key={service.id}
               aria-hidden={!visible}
               aria-label={`${index + 1} dari ${count}: ${service.name}`}
+              aria-current={isActive ? "true" : undefined}
               role="group"
             >
               <span className="showcase-number">{String(index + 1).padStart(2, "0")}</span>
@@ -100,6 +120,8 @@ export default function ServiceShowcase() {
               onClick={() => goTo(index)}
               aria-label={`Tampilkan ${service.name}${index === activeIndex ? ", layanan aktif" : ""}`}
               aria-current={index === activeIndex ? "true" : undefined}
+              aria-pressed={index === activeIndex}
+              data-index={index}
             />
           ))}
         </div>

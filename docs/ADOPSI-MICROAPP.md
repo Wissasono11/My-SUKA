@@ -51,6 +51,8 @@ window.addEventListener('superapp:logout', () => {
 Klaim `user` untuk SISKA hanya `id` dan `primary_role`; `sub` = `user.id` berupa id buram (`usr_…`). `sid` berbeda per layanan agar sesi SISKA tak dapat dikorelasikan dengan layanan lain. Lihat `docs/IDENTITAS-DAN-DATA-PENGGUNA.md` untuk tabel profil lokal.
 Express: `jose` → `jwtVerify(token, createRemoteJWKSet(new URL(JWKS_URL)), { issuer, audience: "<id>", algorithms: ["RS256"] })`. Supabase/Firebase: tukar klaim ke sesi masing-masing di backend.
 
+> **Gunakan `microapp-kit/`** (Python/Node) untuk bagian 4 dan 5: verifikasi `aud`/`typ`/`svc`/`jti`, exchange, dan back-channel logout sudah diimplementasikan dan diuji. Lalu jalankan `check-service.mjs` (lihat `docs/KEAMANAN-MICROAPP.md`).
+
 ## 5. Widget `GET /<layanan>/api/widget/summary` (kontrak 4)
 Bearer = JWT `typ="widget"`, `aud` = layanan Anda, klaim `user` hanya `id` dan `primary_role` (tanpa email/nama/NIM). Verifikasi seperti bagian 4 dan **pakai `user.id` dari token, abaikan parameter identitas dari klien** (anti-IDOR); balas < 1,5 detik, format JSON baku. **SISKA tidak membuat endpoint ini.**
 

@@ -1,0 +1,48 @@
+name: security
+on:
+  push: { branches: [main, development] }
+  pull_request:
+  schedule: [{ cron: "0 3 * * 1" }]   # mingguan: celah baru muncul tanpa ada commit
+
+permissions:
+  contents: read
+
+jobs:
+  secrets-and-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }       # riwayat penuh, agar kunci yang pernah ter-commit juga terdeteksi
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm run secrets:check
+      - name: npm audit (hanya dependensi produksi)
+        run: npm audit --omit=dev --audit-level=high
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: portal-api/requirements-dev.txt }
+      - run: pip install -r portal-api/requirements-dev.txt
+      - name: pip-audit
+        run: cd portal-api && pip-audit -r requirements.txt --strict
+      - name: Uji portal-api dan microapp-kit
+        run: |
+          cd portal-api && python -m pytest -q
+          cd .. && npm run kit:test
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+
+  image-scan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: { include: [{ name: portal-web, context: . }, { name: portal-api, context: portal-api }] }
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t ${{ matrix.name }}:ci ${{ matrix.context }}
+      - uses: aquasecurity/trivy-action@0.28.0
+        with: { image-ref: "${{ matrix.name }}:ci", severity: "HIGH,CRITICAL", exit-code: "1", ignore-unfixed: true }

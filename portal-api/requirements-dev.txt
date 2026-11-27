@@ -1,2 +1,4 @@
 -r requirements.txt
 pytest>=8,<10
+fakeredis>=2.26,<3
+pip-audit>=2.7,<3

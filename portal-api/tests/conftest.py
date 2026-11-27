@@ -1,4 +1,7 @@
 import json
+import os
+
+os.environ["ENV"] = "development"  # app.main membaca ENV saat impor (docs); bawaan aplikasi kini production
 
 import httpx
 import pytest
@@ -11,8 +14,9 @@ from app.main import app
 
 @pytest.fixture(autouse=True)
 def env(monkeypatch):
-    for k in ("ENV", "SSO_PRIVATE_KEY_PEM", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "ADMIN_EMAILS", "IDENTITY_HMAC_SECRET", "PRIVACY_SERVICES", "SESSION_COOKIE_NAME", "SSO_LEGACY_TOKEN_HANDOFF", "TRUST_PROXY", "SSO_RETIRED_JWKS", "SISKA_PUBLIC_ORIGIN", "SUKAKETEMU_BACKCHANNEL_LOGOUT_URL", "SISKA_BACKCHANNEL_LOGOUT_URL"):
+    for k in ("REDIS_URL", "SSO_REQUIRE_PKCE", "SSO_PKCE_SERVICES", "SESSION_IDLE_SECONDS", "DEV_LOGIN", "ENV", "SSO_PRIVATE_KEY_PEM", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "ADMIN_EMAILS", "IDENTITY_HMAC_SECRET", "PRIVACY_SERVICES", "SESSION_COOKIE_NAME", "SSO_LEGACY_TOKEN_HANDOFF", "TRUST_PROXY", "SSO_RETIRED_JWKS", "SISKA_PUBLIC_ORIGIN", "SUKAKETEMU_BACKCHANNEL_LOGOUT_URL", "SISKA_BACKCHANNEL_LOGOUT_URL"):
         monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("ENV", "development")  # bawaan aplikasi kini production; tes berjalan sebagai development
     monkeypatch.setenv("APP_BASE_URL", "https://mysuka.test")
     monkeypatch.setenv("SUKAKETEMU_ORIGIN", "https://sukaketemu.upstream")
     monkeypatch.setenv("SISKA_ORIGIN", "https://siska.upstream")

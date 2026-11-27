@@ -11,6 +11,8 @@ const ERRORS: Record<string, string> = {
   invalid: "Permintaan masuk tidak valid. Silakan coba lagi.",
   config: "Layanan masuk belum dikonfigurasi.",
   ratelimit: "Terlalu banyak percobaan masuk. Tunggu sebentar lalu coba lagi.",
+  unavailable: "Layanan masuk sementara tidak tersedia. Silakan coba lagi sebentar lagi.",
+  idle: "Sesi berakhir karena tidak ada aktivitas. Silakan masuk lagi.",
 };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; returnTo?: string }> }) {
